@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-type View = 'dashboard' | 'users' | 'products.projects' | 'products.projects.add' | 'products.projects.detail' | 'products.projects.detail.addBlock' | 'products.retail' | 'discounts' | 'livestream' | 'inbox';
+type View = 'dashboard' | 'users' | 'products.projects' | 'products.projects.add' | 'products.projects.detail' | 'products.projects.detail.addBlock' | 'products.projects.detail.addFloorPlan' | 'products.projects.detail.blockDetail' | 'products.retail' | 'transactions' | 'livestream' | 'inbox';
 
 // --- MOCK DATA ---
 const mockUsers = [
@@ -39,6 +40,21 @@ const mockProjectAgencies = [
     { projectId: 1, agencyId: 4 },
 ];
 
+const mockUnits = [
+    { id: 1, blockId: 1, floor: 5, code: 'S1.01-0501', type: 'Căn hộ 2PN', area: 75, status: 'Còn trống', price: '3.5 tỷ' },
+    { id: 2, blockId: 1, floor: 5, code: 'S1.01-0502', type: 'Căn hộ 1PN+1', area: 55, status: 'Đã cọc', price: '2.8 tỷ' },
+    { id: 3, blockId: 1, floor: 6, code: 'S1.01-0601', type: 'Căn hộ 2PN', area: 75, status: 'Đã bán', price: '3.6 tỷ' },
+    { id: 4, blockId: 1, floor: 6, code: 'S1.01-0602', type: 'Căn hộ 1PN+1', area: 55, status: 'Còn trống', price: '2.8 tỷ' },
+    { id: 5, blockId: 2, floor: 10, code: 'S2.05-1005', type: 'Căn hộ 3PN', area: 90, status: 'Còn trống', price: '4.5 tỷ' },
+    { id: 6, blockId: 1, floor: 7, code: 'S1.01-0701', type: 'Căn hộ 2PN', area: 75, status: 'Còn trống', price: '3.65 tỷ' },
+    { id: 7, blockId: 1, floor: 7, code: 'S1.01-0702', type: 'Căn hộ 1PN+1', area: 55, status: 'Còn trống', price: '2.85 tỷ' },
+];
+
+const mockIndependentProducts = [
+    { id: 1, projectId: 1, code: 'VILLA-01', type: 'Biệt thự đơn lập', area: 300, status: 'Còn trống' },
+    { id: 2, projectId: 1, code: 'SHOP-A5', type: 'Shophouse góc', area: 120, status: 'Đã bán' },
+    { id: 3, projectId: 2, code: 'VILLA-B2', type: 'Biệt thự song lập', area: 250, status: 'Còn trống' },
+];
 
 const mockRetailProperties = [
     { id: 1, name: 'Biệt thự Thảo Điền', address: 'Quận 2, TP. HCM', price: '150 tỷ', type: 'Biệt thự', status: 'Đang bán' },
@@ -47,11 +63,12 @@ const mockRetailProperties = [
 ];
 
 
-const mockDiscounts = [
-    { id: 1, code: 'SALE50', description: 'Giảm 50% cho lần mua đầu', discount: '50%', expiry: '31/12/2024', status: 'Còn hiệu lực' },
-    { id: 2, code: 'WELCOME10', description: 'Giảm 10% cho khách hàng mới', discount: '10%', expiry: '30/11/2024', status: 'Còn hiệu lực' },
-    { id: 3, code: 'OLDCODE', description: 'Mã giảm giá cũ', discount: '5%', expiry: '01/01/2024', status: 'Hết hạn' },
+const mockTransactions = [
+    { id: 'TXN001', unitCode: 'S1.01-0502', projectName: 'Vinhomes Grand Park', customerName: 'Trần Thị B', amount: '50,000,000 VND', date: '2024-07-20', status: 'Thành công' },
+    { id: 'TXN002', unitCode: 'SHOP-A5', projectName: 'Vinhomes Grand Park', customerName: 'Nguyễn Văn A', amount: '200,000,000 VND', date: '2024-07-19', status: 'Thành công' },
+    { id: 'TXN003', unitCode: 'S2.05-1005', projectName: 'The Origami', customerName: 'Lê Văn C', amount: '100,000,000 VND', date: '2024-07-18', status: 'Đang xử lý' },
 ];
+
 
 const mockConversations = [
     { id: 1, customerName: 'Phạm Nhật Vượng', lastMessage: 'Tôi muốn mua 10 căn hộ.', timestamp: '10:45 AM', avatar: 'PV' },
@@ -94,7 +111,7 @@ const Icon = ({ path, size = 22, style }: { path: React.ReactNode; size?: number
 const DashboardIcon = () => <Icon path={<><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></>} />;
 const UsersIcon = () => <Icon path={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></>} />;
 const ProductsIcon = () => <Icon path={<><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></>} />;
-const DiscountIcon = () => <Icon path={<><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></>} />;
+const TransactionIcon = () => <Icon path={<><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></>} />;
 const LivestreamIcon = () => <Icon path={<><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></>} />;
 const InboxIcon = () => <Icon path={<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></>} />;
 const ChevronLeftIcon = () => <Icon path={<polyline points="15 18 9 12 15 6"></polyline>} />;
@@ -102,6 +119,8 @@ const ChevronRightIcon = () => <Icon path={<polyline points="9 18 15 12 9 6"></p
 const TrashIcon = () => <Icon path={<polyline points="3 6 5 6 21 6"></polyline>} size={18} />;
 const EditIcon = () => <Icon path={<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>} size={18} />;
 const XIcon = () => <Icon path={<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>} size={20} />;
+const DownloadIcon = () => <Icon path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></>} size={18} />;
+
 
 // --- STYLES ---
 const styles: { [key: string]: React.CSSProperties } = {
@@ -571,7 +590,7 @@ const Sidebar = ({ activeView, setView, isCollapsed, setCollapsed }: { activeVie
                 { id: 'products.retail', label: 'Bất động sản lẻ' },
             ]
         },
-        { id: 'discounts', label: 'Quản lý giảm giá', icon: <DiscountIcon /> },
+        { id: 'transactions', label: 'Giao dịch', icon: <TransactionIcon /> },
         { id: 'livestream', label: 'Livestream', icon: <LivestreamIcon /> },
         { id: 'inbox', label: 'Inbox', icon: <InboxIcon /> },
     ];
@@ -653,8 +672,8 @@ const DashboardView = () => (
                 <p style={styles.cardValue}>{mockProjects.length + mockRetailProperties.length}</p>
             </div>
             <div style={styles.card}>
-                <h3 style={styles.cardTitle}>Mã giảm giá</h3>
-                <p style={styles.cardValue}>{mockDiscounts.filter(d => d.status === 'Còn hiệu lực').length}</p>
+                <h3 style={styles.cardTitle}>Giao dịch thành công</h3>
+                <p style={styles.cardValue}>{mockTransactions.filter(t => t.status === 'Thành công').length}</p>
             </div>
             <div style={styles.card}>
                 <h3 style={styles.cardTitle}>Tin nhắn chưa đọc</h3>
@@ -1035,7 +1054,7 @@ const ProjectManagementView = ({ projects, setView, onToggleVisibility, onEditPr
                     <tbody>
                         {projects.map(project => (
                             <tr key={project.id}>
-                                <td style={styles.td}>{project.name}</td>
+                                <td style={{...styles.td, cursor: 'pointer', fontWeight: 500}} onClick={() => onEditProject(project)}>{project.name}</td>
                                 <td style={styles.td}>{project.investor}</td>
                                 <td style={styles.td}>{project.location}</td>
                                 <td style={styles.td}>{project.status}</td>
@@ -1465,6 +1484,7 @@ const TabularDataManagement = ({
     columns,
     data,
     onAdd,
+    onEdit,
     onImport,
     onDelete,
     onBulkDelete,
@@ -1473,8 +1493,10 @@ const TabularDataManagement = ({
     onSelectAll,
     isAllSelected,
     description,
+    renderActions,
 }) => {
     const hasSelection = selectedIds && selectedIds.size > 0;
+    const hasActions = onEdit || onDelete || renderActions;
 
     return (
         <div>
@@ -1491,8 +1513,8 @@ const TabularDataManagement = ({
                              {description && <p style={{margin: '5px 0 0 0', fontSize: '14px', color: 'var(--text-secondary)', maxWidth: '600px', lineHeight: 1.4}}>{description}</p>}
                         </div>
                         <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
-                            <button style={{...styles.button, backgroundColor: '#f8f9fa', color: 'var(--text-color)', border: '1px solid var(--border-color)'}} onClick={onImport}>Import</button>
-                            <button style={styles.button} onClick={onAdd}>Thêm mới</button>
+                            {onImport && <button style={{...styles.button, backgroundColor: '#f8f9fa', color: 'var(--text-color)', border: '1px solid var(--border-color)'}} onClick={onImport}>Import</button>}
+                            {onAdd && <button style={styles.button} onClick={onAdd}>Thêm mới</button>}
                         </div>
                     </>
                 )}
@@ -1501,24 +1523,30 @@ const TabularDataManagement = ({
                 <table style={styles.table}>
                     <thead>
                         <tr>
-                            <th style={{...styles.th, width: '50px' }}>
+                            {onSelectRow && <th style={{...styles.th, width: '50px' }}>
                                 <input type="checkbox" checked={isAllSelected} onChange={onSelectAll} disabled={data.length === 0} />
-                            </th>
+                            </th>}
                             {columns.map(col => <th key={col.key} style={styles.th}>{col.header}</th>)}
-                            <th style={styles.th}>Hành động</th>
+                            {hasActions && <th style={styles.th}>Hành động</th>}
                         </tr>
                     </thead>
                     <tbody>
                         {data.map(item => (
-                            <tr key={item.id} style={{backgroundColor: selectedIds.has(item.id) ? 'var(--active-item-bg)' : 'transparent'}}>
-                                <td style={styles.td}>
+                            <tr key={item.id} style={{backgroundColor: selectedIds && selectedIds.has(item.id) ? 'var(--active-item-bg)' : 'transparent'}}>
+                                {onSelectRow && <td style={styles.td}>
                                     <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => onSelectRow(item.id)} />
-                                </td>
+                                </td>}
                                 {columns.map(col => <td key={col.key} style={styles.td}>{col.render ? col.render(item) : item[col.key]}</td>)}
-                                <td style={styles.td}>
-                                    <button style={styles.actionButton}>Sửa</button>
-                                    <button style={styles.actionButton} onClick={() => onDelete(item.id)}>Xoá</button>
-                                </td>
+                                {hasActions && (
+                                    <td style={styles.td}>
+                                        {renderActions ? renderActions(item) : (
+                                            <>
+                                                {onEdit && <button style={styles.actionButton} onClick={() => onEdit(item)}>Sửa</button>}
+                                                {onDelete && <button style={styles.actionButton} onClick={() => onDelete(item.id)}>Xoá</button>}
+                                            </>
+                                        )}
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>
@@ -1568,7 +1596,7 @@ const SubdivisionTab = ({ projectId }) => {
     );
 };
 
-const BlocksTab = ({ setView, blocks, onDelete, onBulkDelete, selectedIds, onSelectRow, onSelectAll, isAllSelected, onToggleVisibility }) => {
+const BlocksTab = ({ setView, onEditBlock, blocks, onDelete, onBulkDelete, selectedIds, onSelectRow, onSelectAll, isAllSelected, onToggleVisibility }) => {
     const handleAdd = () => {
         setView('products.projects.detail.addBlock');
     };
@@ -1595,6 +1623,7 @@ const BlocksTab = ({ setView, blocks, onDelete, onBulkDelete, selectedIds, onSel
                 columns={columns}
                 data={blocks}
                 onAdd={handleAdd}
+                onEdit={onEditBlock}
                 onImport={handleImport}
                 onDelete={onDelete}
                 onBulkDelete={onBulkDelete}
@@ -1602,23 +1631,237 @@ const BlocksTab = ({ setView, blocks, onDelete, onBulkDelete, selectedIds, onSel
                 onSelectRow={onSelectRow}
                 onSelectAll={onSelectAll}
                 isAllSelected={isAllSelected}
+                // FIX: Added the required 'renderActions' prop to fix a TypeScript error.
+                renderActions={null}
             />;
 };
 
-const FloorPlanTab = ({ projectId, plans, onAddFloorPlan, onDelete, onBulkDelete, selectedIds, onSelectRow, onSelectAll, isAllSelected }) => {
+const IndependentProductsTab = ({ projectId }) => {
+    const [products, setProducts] = useState(mockIndependentProducts.filter(p => p.projectId === projectId));
+
     const handleAdd = () => {
-        // Simple prompt for example, a modal would be better
-        const code = prompt("Nhập mã mặt bằng:");
+        const code = prompt("Nhập mã sản phẩm (VD: VILLA-02):");
         if (code) {
-             onAddFloorPlan({ projectId, code, description: 'Mô tả mới', area: 0 });
+            setProducts(prev => [...prev, { 
+                id: Date.now(), 
+                projectId, 
+                code, 
+                type: 'Biệt thự', 
+                area: 200, 
+                status: 'Còn trống' 
+            }]);
         }
+    };
+
+    const handleDelete = (id) => {
+        if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
+            setProducts(prev => prev.filter(p => p.id !== id));
+        }
+    };
+    
+    const handleEdit = (product) => {
+        alert(`Chức năng sửa cho sản phẩm "${product.code}" đang được phát triển.`);
+    };
+
+    const columns = [
+        { key: 'code', header: 'Mã sản phẩm' },
+        { key: 'type', header: 'Loại hình' },
+        { key: 'area', header: 'Diện tích (m²)' },
+        { key: 'status', header: 'Trạng thái' }
+    ];
+
+    return (
+        <TabularDataManagement
+            title="Quản lý sản phẩm độc lập"
+            description="Thêm và quản lý các sản phẩm đơn lẻ như biệt thự, nhà phố không thuộc một khối/tòa nhà cụ thể."
+            columns={columns}
+            data={products}
+            onAdd={handleAdd}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            // FIX: Added missing 'onImport' prop to fix TypeScript error.
+            onImport={null}
+            selectedIds={new Set()}
+            onSelectRow={()=>{}}
+            onSelectAll={()=>{}}
+            isAllSelected={false}
+            onBulkDelete={()=>{}}
+            renderActions={null}
+        />
+    );
+};
+
+const AddUnitTypeModal = ({ isOpen, onClose, onSave }) => {
+    if (!isOpen) return null;
+    
+    const [name, setName] = useState('');
+    const [type, setType] = useState('Căn hộ chung cư');
+    const [image, setImage] = useState(null);
+    const [fromFloor, setFromFloor] = useState('');
+    const [toFloor, setToFloor] = useState('');
+
+    const UNIT_TYPE_OPTIONS = ["Căn hộ chung cư", "Penthouse", "Duplex", "Condotel", "Officetel", "Shophouse", "Biệt thự", "Nhà liền kề"];
+
+    const handleSave = () => {
+        if (!name || !fromFloor || !toFloor) {
+            alert('Vui lòng điền đầy đủ thông tin bắt buộc.');
+            return;
+        }
+        onSave({ id: Date.now(), name, type, image, fromFloor, toFloor });
+        onClose();
+    };
+    
+    return (
+        <div style={styles.modalBackdrop} onClick={onClose}>
+            <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+                <h3 style={styles.modalHeader}>Thêm loại căn hộ</h3>
+                <button style={styles.modalCloseButton} onClick={onClose}><XIcon /></button>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Tên loại căn</label>
+                    <input type="text" style={styles.formInput} value={name} onChange={e => setName(e.target.value)} placeholder="VD: Căn góc 2 phòng ngủ 75m2" />
+                </div>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Phân loại</label>
+                    <select style={styles.formInput} value={type} onChange={e => setType(e.target.value)}>
+                        {UNIT_TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                </div>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Ảnh mặt bằng loại căn</label>
+                    <input type="file" style={styles.formInput} accept="image/*" onChange={e => setImage(e.target.files ? e.target.files[0] : null)} />
+                </div>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Tầng áp dụng</label>
+                    <div style={styles.formGrid}>
+                        <input type="number" style={styles.formInput} value={fromFloor} onChange={e => setFromFloor(e.target.value)} placeholder="Từ tầng" />
+                        <input type="number" style={styles.formInput} value={toFloor} onChange={e => setToFloor(e.target.value)} placeholder="Đến tầng" />
+                    </div>
+                </div>
+                <div style={styles.formFooter}>
+                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={onClose}>Hủy</button>
+                    <button style={styles.button} onClick={handleSave}>Lưu</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+const AddFloorPlanView = ({ project, setView, onAddFloorPlan }) => {
+    const [planName, setPlanName] = useState('');
+    const [planImage, setPlanImage] = useState(null);
+    const [unitTypes, setUnitTypes] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleAddUnitType = (newUnit) => {
+        setUnitTypes(prev => [...prev, newUnit]);
+    };
+
+    const handleDeleteUnitType = (id) => {
+        setUnitTypes(prev => prev.filter(unit => unit.id !== id));
+    };
+
+    const handleSubmit = () => {
+        if (!planName) {
+            alert('Vui lòng nhập tên mặt bằng.');
+            return;
+        }
+        onAddFloorPlan({
+            projectId: project.id,
+            code: planName, // Using planName as code for now
+            unitTypes,
+            image: planImage
+        });
+        setView('products.projects.detail'); // Go back after saving
+    };
+
+    return (
+        <div>
+            <AddUnitTypeModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleAddUnitType}
+            />
+            <div style={{ marginBottom: '20px' }}>
+                <button onClick={() => setView('products.projects.detail')} style={{...styles.actionButton, border: 'none', padding: '5px 0', marginBottom: '10px'}}>
+                    &larr; Quay lại chi tiết dự án
+                </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{...styles.header, marginBottom: 0 }}>Tạo mặt bằng mới</h2>
+                    <div>
+                         <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={() => setView('products.projects.detail')}>Hủy</button>
+                         <button style={{...styles.button, marginLeft: '10px'}} onClick={handleSubmit}>Lưu</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style={styles.formPageContainer}>
+                {/* Section 1: General Info */}
+                <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>Thông tin chung</h3>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Tên mặt bằng</label>
+                        <input type="text" style={styles.formInput} value={planName} onChange={e => setPlanName(e.target.value)} placeholder="VD: Mặt bằng tầng 5-20 tòa nhà S1" />
+                    </div>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Ảnh mặt bằng tổng thể</label>
+                        <input type="file" style={styles.formInput} accept="image/*" onChange={e => setPlanImage(e.target.files ? e.target.files[0] : null)} />
+                    </div>
+                </div>
+
+                {/* Section 2: Unit types */}
+                <div style={styles.formSection}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h3 style={{...styles.formSectionHeader, border: 'none', padding: 0, margin: 0}}>Các loại căn hộ</h3>
+                        <button style={styles.button} onClick={() => setIsModalOpen(true)}>Thêm mới loại căn</button>
+                    </div>
+                    <div style={styles.tableContainer}>
+                        <table style={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th style={styles.th}>Tên loại căn</th>
+                                    <th style={styles.th}>Phân loại</th>
+                                    <th style={styles.th}>Tầng áp dụng</th>
+                                    <th style={styles.th}>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {unitTypes.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} style={{...styles.td, textAlign: 'center', color: 'var(--text-secondary)'}}>Chưa có loại căn nào.</td>
+                                    </tr>
+                                )}
+                                {unitTypes.map(unit => (
+                                    <tr key={unit.id}>
+                                        <td style={styles.td}>{unit.name}</td>
+                                        <td style={styles.td}>{unit.type}</td>
+                                        <td style={styles.td}>{`Tầng ${unit.fromFloor} - ${unit.toFloor}`}</td>
+                                        <td style={styles.td}>
+                                            <button style={styles.actionButton}>Sửa</button>
+                                            <button style={styles.actionButton} onClick={() => handleDeleteUnitType(unit.id)}>Xoá</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+const FloorPlanTab = ({ setView, projectId, plans, onAddFloorPlan, onDelete, onBulkDelete, selectedIds, onSelectRow, onSelectAll, isAllSelected }) => {
+    const handleAdd = () => {
+        setView('products.projects.detail.addFloorPlan');
     };
      const handleImport = () => alert('Chức năng Import đang được phát triển.');
 
+     // FIX: Added the required 'onEdit' prop to the TabularDataManagement component to fix a TypeScript error.
      return <TabularDataManagement 
-                title="Quản lý Mặt bằng điển hình"
-                // FIX: Added missing 'description' prop.
-                description="Quản lý các loại hình mặt bằng căn hộ, biệt thự... điển hình có trong dự án."
+                title="Thư viện mặt bằng"
+                description=""
                 columns={[
                     { key: 'code', header: 'Mã' }, 
                     { key: 'description', header: 'Mô tả' },
@@ -1626,6 +1869,7 @@ const FloorPlanTab = ({ projectId, plans, onAddFloorPlan, onDelete, onBulkDelete
                 ]}
                 data={plans}
                 onAdd={handleAdd}
+                onEdit={() => alert('Chức năng Sửa đang được phát triển.')}
                 onImport={handleImport}
                 onDelete={onDelete}
                 onBulkDelete={onBulkDelete}
@@ -1633,6 +1877,8 @@ const FloorPlanTab = ({ projectId, plans, onAddFloorPlan, onDelete, onBulkDelete
                 onSelectRow={onSelectRow}
                 onSelectAll={onSelectAll}
                 isAllSelected={isAllSelected}
+                // FIX: Added the required 'renderActions' prop to fix a TypeScript error.
+                renderActions={null}
             />;
 };
 
@@ -1681,7 +1927,7 @@ const AgencyTab = ({ projectId, allUsers }) => {
 };
 
 
-const ProjectDetailView = ({ project, setView, users, blocks, floorPlans, onDeleteBlock, onBulkDeleteBlocks, selectedBlockIds, setSelectedBlockIds, onAddFloorPlan, onDeleteFloorPlan, onBulkDeleteFloorPlans, selectedFloorPlanIds, setSelectedFloorPlanIds, onToggleBlockVisibility }) => {
+const ProjectDetailView = ({ project, setView, users, blocks, floorPlans, onEditBlock, onDeleteBlock, onBulkDeleteBlocks, selectedBlockIds, setSelectedBlockIds, onAddFloorPlan, onDeleteFloorPlan, onBulkDeleteFloorPlans, selectedFloorPlanIds, setSelectedFloorPlanIds, onToggleBlockVisibility }) => {
     const [activeTab, setActiveTab] = useState('overview');
     
     const projectBlocks = blocks.filter(b => b.projectId === project.id);
@@ -1722,7 +1968,8 @@ const ProjectDetailView = ({ project, setView, users, blocks, floorPlans, onDele
         { id: 'overview', label: 'Tổng quan' },
         { id: 'subdivision', label: 'Phân khu' },
         { id: 'blocks', label: 'Khối bất động sản' },
-        { id: 'floorplan', label: 'Mặt bằng điển hình' },
+        { id: 'independent_products', label: 'Sản phẩm độc lập' },
+        { id: 'floorplan', label: 'Thư viện mặt bằng' },
         { id: 'agency', label: 'Đại lý' },
     ];
 
@@ -1731,6 +1978,7 @@ const ProjectDetailView = ({ project, setView, users, blocks, floorPlans, onDele
             case 'subdivision': return <SubdivisionTab projectId={project.id} />;
             case 'blocks': return <BlocksTab 
                                     setView={setView} 
+                                    onEditBlock={onEditBlock}
                                     blocks={projectBlocks}
                                     onDelete={onDeleteBlock}
                                     onBulkDelete={onBulkDeleteBlocks}
@@ -1740,7 +1988,9 @@ const ProjectDetailView = ({ project, setView, users, blocks, floorPlans, onDele
                                     isAllSelected={isAllBlocksSelected}
                                     onToggleVisibility={onToggleBlockVisibility}
                                 />;
+            case 'independent_products': return <IndependentProductsTab projectId={project.id} />;
             case 'floorplan': return <FloorPlanTab 
+                                        setView={setView}
                                         projectId={project.id} 
                                         plans={projectFloorPlans} 
                                         onAddFloorPlan={onAddFloorPlan}
@@ -1778,6 +2028,267 @@ const ProjectDetailView = ({ project, setView, users, blocks, floorPlans, onDele
                 ))}
             </div>
             <div style={styles.tabContent}>
+                {renderTabContent()}
+            </div>
+        </div>
+    );
+};
+
+
+// --- BLOCK DETAIL VIEW AND TABS (NEW) ---
+
+const BlockGeneralInfoTab = ({ block, onUpdateBlock }) => {
+    // A simplified version of AddBlockView for editing
+    const [formData, setFormData] = useState(block);
+
+    const handleChange = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    return (
+        <div style={{maxWidth: '900px', margin: '0 auto'}}>
+            <div style={styles.formSection}>
+                <h3 style={styles.formSectionHeader}>Thông tin chung</h3>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Tên thương mại</label>
+                    <input type="text" style={styles.formInput} value={formData.name} onChange={e => handleChange('name', e.target.value)} />
+                </div>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Loại hình</label>
+                    <input type="text" style={styles.formInput} value={formData.type} onChange={e => handleChange('type', e.target.value)} />
+                </div>
+                {/* Add other fields from AddBlockView here for editing */}
+            </div>
+             <div style={styles.formFooter}>
+                <button style={styles.button} onClick={() => onUpdateBlock(formData)}>Lưu thay đổi</button>
+            </div>
+        </div>
+    );
+};
+
+const BlockFloorPlanManagementTab = ({ block }) => {
+    const handleSaveAsTemplate = (plan) => alert(`Lưu mặt bằng "${plan.name}" làm template.`);
+    const handleCreateUnits = () => alert('Chức năng "Tạo giỏ hàng" sẽ tự động tạo các căn hộ cho khối này dựa trên mặt bằng đã chọn.');
+
+    const mockBlockFloorPlans = [
+        { id: 1, name: 'Mặt bằng thương mại', type: 'Tầng 1-4' },
+        { id: 2, name: 'Mặt bằng căn hộ điển hình', type: 'Tầng 5-20' },
+        { id: 3, name: 'Mặt bằng Penthouse', type: 'Tầng 21' },
+    ];
+    const [plans, setPlans] = useState(mockBlockFloorPlans);
+
+    const renderPlanActions = (item) => (
+        <>
+            <button style={{...styles.actionButton, marginRight: 0}} onClick={() => alert(`Sửa mặt bằng ${item.name}`)}>Sửa</button>
+            <button style={{...styles.actionButton, marginRight: 0}} onClick={() => setPlans(p => p.filter(plan => plan.id !== item.id))}>Xoá</button>
+            <button style={styles.actionButton} onClick={() => handleSaveAsTemplate(item)}>Lưu template</button>
+        </>
+    );
+
+    return (
+         <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0, fontSize: '20px' }}>Quản lý mặt bằng cho {block.name}</h3>
+                <div style={{display: 'flex', gap: '10px'}}>
+                    <button style={styles.button} onClick={handleCreateUnits}>Tạo giỏ hàng</button>
+                </div>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', marginTop: 0}}>
+                Thêm mới hoặc import mặt bằng tầng điển hình cho khối này. Sau khi có mặt bằng, bạn có thể "Tạo giỏ hàng" để hệ thống tự động sinh ra danh sách các căn hộ.
+            </p>
+            {/* FIX: Added missing required props 'onEdit' and 'onDelete' to fix a TypeScript error. */}
+            <TabularDataManagement
+                title=""
+                description=""
+                columns={[
+                    {key: 'name', header: 'Tên mặt bằng'}, 
+                    {key: 'type', header: 'Phạm vi áp dụng'}
+                ]}
+                data={plans}
+                onAdd={() => alert('Thêm mặt bằng mới...')}
+                onImport={() => alert('Import mặt bằng...')}
+                renderActions={renderPlanActions}
+                onBulkDelete={() => alert('Xoá các mặt bằng đã chọn...')}
+                selectedIds={new Set()}
+                onSelectRow={() => {}}
+                onSelectAll={() => {}}
+                isAllSelected={false}
+                onEdit={null}
+                onDelete={null}
+            />
+        </div>
+    );
+};
+
+const BlockUnitManagementTab = ({ block, units, onUpdateUnit }) => {
+    const [filters, setFilters] = useState({ floor: '', type: '', status: '' });
+    const [editingCell, setEditingCell] = useState(null); // { unitId: number, field: string }
+
+    const handleFilterChange = (field, value) => {
+        setFilters(prev => ({...prev, [field]: value}));
+    };
+    
+    const handleUnitUpdate = (unitId, field, value) => {
+        onUpdateUnit(unitId, field, value);
+        setEditingCell(null); // Exit editing mode
+    };
+
+    const filteredUnits = useMemo(() => {
+        return units.filter(unit => 
+            (filters.floor ? String(unit.floor) === filters.floor : true) &&
+            (filters.type ? unit.type === filters.type : true) &&
+            (filters.status ? unit.status === filters.status : true)
+        );
+    }, [units, filters]);
+    
+    const uniqueUnitTypes = [...new Set(units.map(u => u.type))];
+    const STATUS_OPTIONS = ['Còn trống', 'Đã cọc', 'Đã bán'];
+    
+    const renderEditableCell = (unit, field) => {
+        const isEditing = editingCell?.unitId === unit.id && editingCell?.field === field;
+        
+        if (isEditing) {
+            if (field === 'status') {
+                return (
+                    <select
+                        style={{...styles.formInput, padding: '5px'}}
+                        defaultValue={unit.status}
+                        onBlur={(e) => handleUnitUpdate(unit.id, field, e.target.value)}
+                        onChange={(e) => handleUnitUpdate(unit.id, field, e.target.value)}
+                        autoFocus
+                    >
+                        {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                );
+            }
+             return (
+                <input
+                    type="text"
+                    style={{...styles.formInput, padding: '5px'}}
+                    defaultValue={unit[field]}
+                    onBlur={(e) => handleUnitUpdate(unit.id, field, e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                    autoFocus
+                />
+            );
+        }
+
+        return <span onClick={() => setEditingCell({ unitId: unit.id, field })}>{unit[field]}</span>
+    }
+
+    return (
+        <div>
+             <h3 style={{ margin: 0, fontSize: '20px', marginBottom: '20px' }}>Quản lý giỏ hàng - {block.name}</h3>
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                <div>
+                    <label style={styles.formLabel}>Tầng</label>
+                    <input type="number" style={styles.formInput} placeholder="Tất cả" value={filters.floor} onChange={(e) => handleFilterChange('floor', e.target.value)}/>
+                </div>
+                 <div>
+                    <label style={styles.formLabel}>Loại căn</label>
+                    <select style={styles.formInput} value={filters.type} onChange={(e) => handleFilterChange('type', e.target.value)}>
+                        <option value="">Tất cả</option>
+                        {uniqueUnitTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                    </select>
+                </div>
+                 <div>
+                    <label style={styles.formLabel}>Trạng thái</label>
+                    <select style={styles.formInput} value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)}>
+                        <option value="">Tất cả</option>
+                        {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                </div>
+             </div>
+             <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={styles.th}>Mã căn</th>
+                            <th style={styles.th}>Tầng</th>
+                            <th style={styles.th}>Loại căn</th>
+                            <th style={styles.th}>Diện tích (m²)</th>
+                            <th style={styles.th}>Giá</th>
+                            <th style={styles.th}>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredUnits.map(unit => (
+                            <tr key={unit.id}>
+                                <td style={styles.td}>{renderEditableCell(unit, 'code')}</td>
+                                <td style={styles.td}>{unit.floor}</td>
+                                <td style={styles.td}>{unit.type}</td>
+                                <td style={styles.td}>{renderEditableCell(unit, 'area')}</td>
+                                <td style={styles.td}>{renderEditableCell(unit, 'price')}</td>
+                                <td style={styles.td}>{renderEditableCell(unit, 'status')}</td>
+                            </tr>
+                        ))}
+                         {filteredUnits.length === 0 && (
+                            <tr>
+                                <td colSpan={6} style={{...styles.td, textAlign: 'center', color: 'var(--text-secondary)'}}>
+                                    Không có căn hộ nào khớp với bộ lọc.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+             </div>
+        </div>
+    );
+};
+
+
+const BlockDetailView = ({ block, project, setView, units, onUpdateUnit, onUpdateBlock }) => {
+    const [activeTab, setActiveTab] = useState('units');
+
+    if (!block || !project) {
+        // This can happen if the user refreshes the page on this view.
+        // In a real app, you'd fetch the data based on an ID from the URL.
+        return (
+            <div>
+                <p>Không tìm thấy dữ liệu. Vui lòng quay lại.</p>
+                <button onClick={() => setView('products.projects')}>Quay lại danh sách dự án</button>
+            </div>
+        );
+    }
+    
+    const blockUnits = units.filter(u => u.blockId === block.id);
+
+    const tabs = [
+        { id: 'info', label: 'Thông tin chung' },
+        { id: 'floorplan', label: 'Quản lý mặt bằng' },
+        { id: 'units', label: 'Quản lý giỏ hàng' },
+    ];
+
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'info': return <BlockGeneralInfoTab block={block} onUpdateBlock={onUpdateBlock} />;
+            case 'floorplan': return <BlockFloorPlanManagementTab block={block} />;
+            case 'units':
+            default:
+                return <BlockUnitManagementTab block={block} units={blockUnits} onUpdateUnit={onUpdateUnit} />;
+        }
+    };
+    
+    return (
+        <div>
+            <div style={{ marginBottom: '20px' }}>
+                <button onClick={() => setView('products.projects.detail')} style={{...styles.actionButton, border: 'none', padding: '5px 0', marginBottom: '10px'}}>
+                    &larr; Quay lại chi tiết dự án
+                </button>
+                <h2 style={{...styles.header, marginBottom: 0 }}>{block.name} <span style={{color: 'var(--text-secondary)', fontWeight: 400}}>- {project.name}</span></h2>
+            </div>
+            <div style={styles.tabContainer}>
+                {tabs.map(tab => (
+                    <button
+                        key={tab.id}
+                        style={{ ...styles.tabButton, ...(activeTab === tab.id ? styles.activeTabButton : {}) }}
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+            <div> {/* Removed tabContent style to avoid double boxing */}
                 {renderTabContent()}
             </div>
         </div>
@@ -1825,43 +2336,52 @@ const RetailPropertyView = () => (
     </div>
 );
 
-const DiscountManagementView = () => (
-    <div>
-        <h2 style={styles.header}>Quản lý mã giảm giá</h2>
-        <div style={styles.toolbar}>
-            <button style={styles.button}>Tạo mã mới</button>
-        </div>
-        <div style={styles.tableContainer}>
-            <table style={styles.table}>
-                <thead>
-                    <tr>
-                        <th style={styles.th}>Mã</th>
-                        <th style={styles.th}>Mô tả</th>
-                        <th style={styles.th}>Giảm giá</th>
-                        <th style={styles.th}>Ngày hết hạn</th>
-                        <th style={styles.th}>Trạng thái</th>
-                        <th style={styles.th}>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {mockDiscounts.map(discount => (
-                        <tr key={discount.id}>
-                            <td style={styles.td}>{discount.code}</td>
-                            <td style={styles.td}>{discount.description}</td>
-                            <td style={styles.td}>{discount.discount}</td>
-                            <td style={styles.td}>{discount.expiry}</td>
-                            <td style={styles.td}>{discount.status}</td>
-                            <td style={styles.td}>
-                                <button style={styles.actionButton}>Sửa</button>
-                                <button style={styles.actionButton}>Xoá</button>
-                            </td>
+const TransactionManagementView = () => {
+    const handleDownloadReceipt = (transaction) => {
+        alert(`Đang tải xuống biên lai cho giao dịch ${transaction.id}...`);
+    };
+
+    return (
+        <div>
+            <h2 style={styles.header}>Quản lý Giao dịch</h2>
+            <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={styles.th}>Mã Giao dịch</th>
+                            <th style={styles.th}>Sản phẩm</th>
+                            <th style={styles.th}>Khách hàng</th>
+                            <th style={styles.th}>Số tiền cọc</th>
+                            <th style={styles.th}>Ngày Giao dịch</th>
+                            <th style={styles.th}>Trạng thái</th>
+                            <th style={styles.th}>Hành động</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {mockTransactions.map(transaction => (
+                            <tr key={transaction.id}>
+                                <td style={{...styles.td, fontWeight: 500}}>{transaction.id}</td>
+                                <td style={styles.td}>
+                                    <div>{transaction.unitCode}</div>
+                                    <div style={{fontSize: '13px', color: 'var(--text-secondary)'}}>{transaction.projectName}</div>
+                                </td>
+                                <td style={styles.td}>{transaction.customerName}</td>
+                                <td style={styles.td}>{transaction.amount}</td>
+                                <td style={styles.td}>{transaction.date}</td>
+                                <td style={styles.td}>{transaction.status}</td>
+                                <td style={styles.td}>
+                                    <button style={{...styles.actionButton, display: 'inline-flex', alignItems: 'center', gap: '5px'}} onClick={() => handleDownloadReceipt(transaction)}>
+                                        <DownloadIcon /> Tải biên lai
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const LivestreamView = () => (
     <div>
@@ -1957,7 +2477,9 @@ const App = () => {
     const [projects, setProjects] = useState(mockProjects);
     const [blocks, setBlocks] = useState(mockBlocks);
     const [floorPlans, setFloorPlans] = useState(mockFloorPlans);
+    const [units, setUnits] = useState(mockUnits);
     const [selectedProject, setSelectedProject] = useState(null);
+    const [selectedBlock, setSelectedBlock] = useState(null);
     const [selectedBlockIds, setSelectedBlockIds] = useState(new Set());
     const [selectedFloorPlanIds, setSelectedFloorPlanIds] = useState(new Set());
 
@@ -1973,7 +2495,13 @@ const App = () => {
     };
     
     const handleAddFloorPlan = (newPlan) => {
-        setFloorPlans(prev => [...prev, { ...newPlan, id: Date.now() }]);
+        const simplifiedPlan = {
+            ...newPlan,
+            id: Date.now(),
+            description: `${newPlan.unitTypes.length} loại căn`,
+            area: 'N/A' 
+        };
+        setFloorPlans(prev => [...prev, simplifiedPlan]);
     };
 
     const handleProjectVisibilityToggle = (projectId: number) => {
@@ -1984,17 +2512,28 @@ const App = () => {
         );
     };
 
-    const handleEditProject = (project) => {
+    const handleSelectProjectForDetail = (project) => {
         setSelectedProject(project);
         setSelectedBlockIds(new Set());
         setSelectedFloorPlanIds(new Set());
         setActiveView('products.projects.detail');
+    };
+    
+    const handleSelectBlockForDetail = (block) => {
+        setSelectedBlock(block);
+        setActiveView('products.projects.detail.blockDetail');
     };
 
     const handleDeleteBlock = (id) => setBlocks(prev => prev.filter(item => item.id !== id));
     const handleBulkDeleteBlocks = () => {
         setBlocks(prev => prev.filter(item => !selectedBlockIds.has(item.id)));
         setSelectedBlockIds(new Set());
+    };
+    
+    const handleUpdateBlock = (updatedBlock) => {
+        setBlocks(prev => prev.map(block => block.id === updatedBlock.id ? updatedBlock : block));
+        setSelectedBlock(updatedBlock); // Keep the selected block updated
+        alert('Đã lưu thông tin khối!');
     };
 
     const handleToggleBlockVisibility = (blockId: number) => {
@@ -2010,13 +2549,21 @@ const App = () => {
         setFloorPlans(prev => prev.filter(item => !selectedFloorPlanIds.has(item.id)));
         setSelectedFloorPlanIds(new Set());
     };
+    
+    const handleUpdateUnit = (unitId, field, value) => {
+        setUnits(prevUnits => 
+            prevUnits.map(unit => 
+                unit.id === unitId ? { ...unit, [field]: value } : unit
+            )
+        );
+    };
 
     const renderView = () => {
         switch (activeView) {
             case 'users':
                 return <UserManagementView />;
             case 'products.projects':
-                return <ProjectManagementView projects={projects} setView={setActiveView} onToggleVisibility={handleProjectVisibilityToggle} onEditProject={handleEditProject} />;
+                return <ProjectManagementView projects={projects} setView={setActiveView} onToggleVisibility={handleProjectVisibilityToggle} onEditProject={handleSelectProjectForDetail} />;
             case 'products.projects.add':
                 return <AddProjectView onAddProject={handleAddProject} setView={setActiveView} />;
             case 'products.projects.detail':
@@ -2026,6 +2573,7 @@ const App = () => {
                             users={mockUsers} 
                             blocks={blocks} 
                             floorPlans={floorPlans}
+                            onEditBlock={handleSelectBlockForDetail}
                             onDeleteBlock={handleDeleteBlock}
                             onBulkDeleteBlocks={handleBulkDeleteBlocks}
                             selectedBlockIds={selectedBlockIds}
@@ -2039,10 +2587,21 @@ const App = () => {
                          />;
             case 'products.projects.detail.addBlock':
                  return <AddBlockView project={selectedProject} setView={setActiveView} onAddBlock={handleAddBlock} />;
+            case 'products.projects.detail.addFloorPlan':
+                 return <AddFloorPlanView project={selectedProject} setView={setActiveView} onAddFloorPlan={handleAddFloorPlan} />;
+            case 'products.projects.detail.blockDetail':
+                return <BlockDetailView 
+                            block={selectedBlock} 
+                            project={selectedProject} 
+                            setView={setActiveView} 
+                            units={units}
+                            onUpdateUnit={handleUpdateUnit}
+                            onUpdateBlock={handleUpdateBlock}
+                       />;
             case 'products.retail':
                 return <RetailPropertyView />;
-            case 'discounts':
-                return <DiscountManagementView />;
+            case 'transactions':
+                return <TransactionManagementView />;
             case 'livestream':
                 return <LivestreamView />;
             case 'inbox':
