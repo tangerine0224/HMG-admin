@@ -69,6 +69,11 @@ const mockTransactions = [
     { id: 'TXN003', unitCode: 'S2.05-1005', projectName: 'The Origami', customerName: 'Lê Văn C', amount: '100,000,000 VND', date: '2024-07-18', status: 'Đang xử lý' },
 ];
 
+const mockLivestreams = [
+    { id: 1, title: 'Mở bán dự án The 9 Stellars', startTime: '2024-08-15T19:00', youtubeLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+    { id: 2, title: 'Giới thiệu dự án Masteri', startTime: '2024-08-20T10:00', youtubeLink: 'https://youtu.be/dQw4w9WgXcQ' },
+    { id: 3, title: 'Hỏi đáp cùng chuyên gia (Đã diễn ra)', startTime: '2024-07-25T14:00', youtubeLink: 'https://youtube.com/live/someid' },
+];
 
 const mockConversations = [
     { id: 1, customerName: 'Phạm Nhật Vượng', lastMessage: 'Tôi muốn mua 10 căn hộ.', timestamp: '10:45 AM', avatar: 'PV' },
@@ -88,6 +93,23 @@ const mockMessages = {
     3: [
          { id: 1, sender: 'customer', text: 'Gửi cho tôi bảng giá thép...' },
     ]
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        const options: Intl.DateTimeFormatOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        };
+        return new Intl.DateTimeFormat('vi-VN', options).format(date);
+    } catch (error) {
+        return dateString;
+    }
 };
 
 // --- ICONS ---
@@ -2383,41 +2405,150 @@ const TransactionManagementView = () => {
     );
 };
 
-const LivestreamView = () => (
-    <div>
-        <h2 style={styles.header}>Quản lý Livestream</h2>
-        <div style={styles.toolbar}>
-            <button style={styles.button}>Tạo livestream mới</button>
-        </div>
-        <div style={{ ...styles.card, marginBottom: '20px' }}>
-            <h3 style={styles.cardTitle}>
-                Livestream hiện tại
-                <span style={styles.liveBadge}>LIVE</span>
-            </h3>
-            <p style={{ fontSize: '20px', fontWeight: 600, margin: '10px 0' }}>Mở bán dự án The 9 Stellars</p>
-            <p style={{ color: 'var(--text-secondary)' }}>Đang xem: 1,288</p>
-        </div>
-        <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Livestream đã lên lịch</h3>
-            <div style={{ marginTop: '15px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border-color)' }}>
-                    <div>
-                        <p style={{ fontWeight: 500 }}>Giới thiệu dự án Masteri</p>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>10:00 - 25/12/2024</p>
-                    </div>
-                    <button style={styles.button}>Bắt đầu</button>
+const AddLivestreamModal = ({ isOpen, onClose, onAdd }) => {
+    const [title, setTitle] = useState('');
+    const [startTime, setStartTime] = useState('');
+    const [youtubeLink, setYoutubeLink] = useState('');
+    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+    if (!isOpen) return null;
+
+    const validate = () => {
+        const newErrors: { [key: string]: string } = {};
+        if (!title.trim()) newErrors.title = "Vui lòng nhập tiêu đề.";
+        if (!startTime) newErrors.startTime = "Vui lòng chọn thời gian bắt đầu.";
+
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+        if (!youtubeLink.trim()) {
+            newErrors.youtubeLink = "Vui lòng nhập Link YouTube.";
+        } else if (!youtubeRegex.test(youtubeLink)) {
+            newErrors.youtubeLink = "Link YouTube không hợp lệ.";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = () => {
+        if (validate()) {
+            onAdd({ title, startTime, youtubeLink });
+            handleClose();
+        }
+    };
+    
+    const handleClose = () => {
+        setTitle('');
+        setStartTime('');
+        setYoutubeLink('');
+        setErrors({});
+        onClose();
+    };
+
+    return (
+        <div style={styles.modalBackdrop} onClick={handleClose}>
+            <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+                <h3 style={styles.modalHeader}>Tạo lịch Livestream mới</h3>
+                <button style={styles.modalCloseButton} onClick={handleClose}><XIcon /></button>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Tiêu đề</label>
+                    <input type="text" style={styles.formInput} value={title} onChange={e => setTitle(e.target.value)} />
+                    {errors.title && <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>{errors.title}</p>}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' }}>
-                    <div>
-                        <p style={{ fontWeight: 500 }}>Hỏi đáp cùng chuyên gia</p>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>14:00 - 30/12/2024</p>
-                    </div>
-                    <button style={styles.button}>Bắt đầu</button>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Thời gian bắt đầu</label>
+                    <input type="datetime-local" style={styles.formInput} value={startTime} onChange={e => setStartTime(e.target.value)} />
+                     {errors.startTime && <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>{errors.startTime}</p>}
+                </div>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Link YouTube</label>
+                    <input type="text" style={styles.formInput} value={youtubeLink} onChange={e => setYoutubeLink(e.target.value)} placeholder="https://www.youtube.com/watch?v=..."/>
+                     {errors.youtubeLink && <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>{errors.youtubeLink}</p>}
+                </div>
+                <div style={styles.formFooter}>
+                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={handleClose}>Hủy</button>
+                    <button style={styles.button} onClick={handleSubmit}>Lưu</button>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
+
+const LivestreamManagementView = ({ livestreams, onAdd, onDelete }) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    const now = new Date();
+    const upcomingStreams = livestreams.filter(s => new Date(s.startTime) >= now).sort((a,b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    const pastStreams = livestreams.filter(s => new Date(s.startTime) < now).sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+
+    return (
+        <div>
+            <AddLivestreamModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onAdd={onAdd} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ ...styles.header, marginBottom: 0 }}>Quản lý Livestream</h2>
+                <button style={styles.button} onClick={() => setIsModalOpen(true)}>Tạo lịch mới</button>
+            </div>
+
+            <div style={styles.formSection}>
+                <h3 style={styles.formSectionHeader}>Sắp diễn ra</h3>
+                <div style={styles.tableContainer}>
+                    <table style={styles.table}>
+                        <thead>
+                            <tr>
+                                <th style={styles.th}>Tiêu đề</th>
+                                <th style={styles.th}>Thời gian bắt đầu</th>
+                                <th style={styles.th}>Link</th>
+                                <th style={styles.th}>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {upcomingStreams.length === 0 && <tr><td colSpan={4} style={{...styles.td, textAlign: 'center'}}>Chưa có lịch livestream nào.</td></tr>}
+                            {upcomingStreams.map(stream => (
+                                <tr key={stream.id}>
+                                    <td style={styles.td}>{stream.title}</td>
+                                    <td style={styles.td}>{formatDate(stream.startTime)}</td>
+                                    <td style={styles.td}><a href={stream.youtubeLink} target="_blank" rel="noopener noreferrer">Xem link</a></td>
+                                    <td style={styles.td}>
+                                        <button style={styles.actionButton}><EditIcon /></button>
+                                        <button style={styles.actionButton} onClick={() => onDelete(stream.id)}><TrashIcon /></button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style={styles.formSection}>
+                <h3 style={styles.formSectionHeader}>Đã kết thúc</h3>
+                <div style={styles.tableContainer}>
+                     <table style={styles.table}>
+                        <thead>
+                            <tr>
+                                <th style={styles.th}>Tiêu đề</th>
+                                <th style={styles.th}>Thời gian bắt đầu</th>
+                                <th style={styles.th}>Link</th>
+                                <th style={styles.th}>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {pastStreams.length === 0 && <tr><td colSpan={4} style={{...styles.td, textAlign: 'center'}}>Chưa có livestream nào đã kết thúc.</td></tr>}
+                            {pastStreams.map(stream => (
+                                <tr key={stream.id}>
+                                    <td style={styles.td}>{stream.title}</td>
+                                    <td style={styles.td}>{formatDate(stream.startTime)}</td>
+                                    <td style={styles.td}><a href={stream.youtubeLink} target="_blank" rel="noopener noreferrer">Xem link</a></td>
+                                    <td style={styles.td}>
+                                         <button style={styles.actionButton} onClick={() => onDelete(stream.id)}><TrashIcon /></button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const InboxView = () => {
     const [selectedConversationId, setSelectedConversationId] = useState(1);
@@ -2478,6 +2609,7 @@ const App = () => {
     const [blocks, setBlocks] = useState(mockBlocks);
     const [floorPlans, setFloorPlans] = useState(mockFloorPlans);
     const [units, setUnits] = useState(mockUnits);
+    const [livestreams, setLivestreams] = useState(mockLivestreams);
     const [selectedProject, setSelectedProject] = useState(null);
     const [selectedBlock, setSelectedBlock] = useState(null);
     const [selectedBlockIds, setSelectedBlockIds] = useState(new Set());
@@ -2558,6 +2690,17 @@ const App = () => {
         );
     };
 
+    const handleAddLivestream = (newStream) => {
+        setLivestreams(prev => [{...newStream, id: Date.now()}, ...prev]);
+    };
+
+    const handleDeleteLivestream = (id) => {
+        if(confirm('Bạn có chắc muốn xóa lịch livestream này?')) {
+            setLivestreams(prev => prev.filter(s => s.id !== id));
+        }
+    };
+
+
     const renderView = () => {
         switch (activeView) {
             case 'users':
@@ -2603,7 +2746,7 @@ const App = () => {
             case 'transactions':
                 return <TransactionManagementView />;
             case 'livestream':
-                return <LivestreamView />;
+                return <LivestreamManagementView livestreams={livestreams} onAdd={handleAddLivestream} onDelete={handleDeleteLivestream} />;
             case 'inbox':
                 return <InboxView />;
             case 'dashboard':
