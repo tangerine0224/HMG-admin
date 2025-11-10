@@ -1,8 +1,6 @@
-
+// FIX: Correctly import React hooks and remove invalid 'aistudio' import.
 import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-
-type View = 'dashboard' | 'users' | 'products.projects' | 'products.projects.add' | 'products.projects.detail' | 'products.projects.detail.addBlock' | 'products.projects.detail.addFloorPlan' | 'products.projects.detail.blockDetail' | 'products.retail' | 'transactions' | 'livestream' | 'inbox';
 
 // --- MOCK DATA ---
 const mockUsers = [
@@ -13,47 +11,36 @@ const mockUsers = [
 ];
 
 const mockProjects = [
-    { id: 1, name: 'Vinhomes Grand Park', investor: 'Vingroup', location: 'Quận 9, TP. HCM', coordinates: '10.8411, 106.8099', description: 'Đại đô thị thông minh', landArea: 2710000, buildArea: 542000, email: 'info@vinhomes.vn', facebook: 'fb.com/vinhomes', tiktok: 'tiktok.com/@vinhomes', status: 'Đang bán', visible: true },
-    { id: 2, name: 'The Origami', investor: 'Vingroup', location: 'Quận 9, TP. HCM', coordinates: '10.8411, 106.8099', description: 'Phân khu phong cách Nhật Bản', landArea: 260000, buildArea: 52000, email: 'info@origami.vn', facebook: '', tiktok: '', status: 'Đã bán', visible: true },
-    { id: 3, name: 'Masteri Centre Point', investor: 'Masterise Homes', location: 'Quận 9, TP. HCM', coordinates: '10.8411, 106.8099', description: 'Khu căn hộ cao cấp', landArea: 70000, buildArea: 14000, email: 'info@masterise.vn', facebook: 'fb.com/masterise', tiktok: '', status: 'Sắp mở bán', visible: false },
+    { id: 1, name: 'Vinhomes Grand Park', investor: 'Vingroup', location: 'Quận 9, TP. HCM', coordinates: '10.8411, 106.8099', description: 'Đại đô thị thông minh', landArea: 2710000, buildArea: 542000, email: 'info@vinhomes.vn', facebook: 'fb.com/vinhomes', tiktok: 'tiktok.com/@vinhomes', status: 'Đang mở bán', visible: true, createdAt: '2023-01-10T09:00:00Z' },
+    { id: 2, name: 'The Origami', investor: 'Vingroup', location: 'Quận 9, TP. HCM', coordinates: '10.8411, 106.8099', description: 'Phân khu phong cách Nhật Bản', landArea: 260000, buildArea: 52000, email: 'info@origami.vn', facebook: '', tiktok: '', status: 'Đã bán hết', visible: true, createdAt: '2023-05-15T14:30:00Z' },
+    { id: 3, name: 'Masteri Centre Point', investor: 'Masterise Homes', location: 'Quận 9, TP. HCM', coordinates: '10.8411, 106.8099', description: 'Khu căn hộ cao cấp', landArea: 70000, buildArea: 14000, email: 'info@masterise.vn', facebook: 'fb.com/masterise', tiktok: '', status: 'Sắp mở bán', visible: false, createdAt: '2024-02-20T11:00:00Z' },
 ];
 
 const mockSubdivisions = [
-    { id: 1, projectId: 1, name: 'The Rainbow' },
-    { id: 2, projectId: 1, name: 'The Origami' },
-    { id: 3, projectId: 1, name: 'The Manhattan' },
+    // Subdivisions (Phân khu)
+    { id: 1, category: 'subdivision', projectId: 1, name: 'The Rainbow', code: 'RB', type: 'Phân khu Căn hộ', status: 'Đã bàn giao', createdAt: '2023-01-15T10:00:00Z', visible: true },
+    { id: 2, category: 'subdivision', projectId: 1, name: 'The Origami', code: 'OG', type: 'Phân khu Căn hộ', status: 'Đang xây dựng', createdAt: '2023-05-20T14:30:00Z', visible: true },
+    { id: 3, category: 'subdivision', projectId: 1, name: 'The Manhattan', code: 'MH', type: 'Phân khu Biệt thự', status: 'Đã bàn giao', createdAt: '2022-11-10T09:00:00Z', visible: false },
+
+    // Blocks (Khối BĐS)
+    { id: 4, category: 'block', projectId: 1, parentSubdivisionId: 1, name: 'Tòa S1.01', code: 'S101', type: 'Chung cư', status: 'Đang mở bán', unitCount: 250, createdAt: '2024-02-01T11:00:00Z', visible: true },
+    { id: 5, category: 'block', projectId: 1, parentSubdivisionId: 2, name: 'Tòa S2.02', code: 'S202', type: 'Chung cư', status: 'Đang xây dựng', unitCount: 300, createdAt: '2024-06-15T16:45:00Z', visible: true },
+    { id: 6, category: 'block', projectId: 1, parentSubdivisionId: 3, name: 'Khu Liền kề A - Phố Đông', code: 'LK-A', type: 'Liền kề', status: 'Đã bán hết', unitCount: 50, createdAt: '2023-09-15T16:45:00Z', visible: false },
+    { id: 7, category: 'block', projectId: 2, name: 'Central Park 1', code: 'CP1', type: 'Shophouse', status: 'Sắp mở bán', unitCount: 40, createdAt: '2024-08-01T10:00:00Z', visible: true }, // No parent subdivision
 ];
 
-const mockBlocks = [
-    { id: 1, projectId: 1, subdivisionId: 1, name: 'Tòa S1.01', type: 'Tòa nhà Căn hộ', visible: true },
-    { id: 2, projectId: 1, subdivisionId: 1, name: 'Tòa S2.05', type: 'Tòa nhà Căn hộ', visible: true },
-    { id: 3, projectId: 1, subdivisionId: 3, name: 'Khu biệt thự The Manhattan', type: 'Khu biệt thự', visible: false },
-];
-
-const mockFloorPlans = [
-    { id: 1, projectId: 1, code: 'C1-A', description: 'Căn hộ 1PN+1', area: 55 },
-    { id: 2, projectId: 1, code: 'C2-B', description: 'Căn hộ 2PN', area: 75 },
+const mockUnitTypes = [
+    { id: 1, name: 'Căn 2PN-A (59m2) - View hồ', type: 'Căn hộ', area: 59, bedrooms: 2, bathrooms: 2, createdAt: '2023-08-01T10:00:00Z' },
+    { id: 2, name: 'Shophouse khối đế S1.01', type: 'Shophouse', area: 120, bedrooms: 0, bathrooms: 1, createdAt: '2023-08-05T11:30:00Z' },
+    { id: 3, name: 'Biệt thự song lập Garden View', type: 'Biệt thự', area: 250, bedrooms: 4, bathrooms: 5, createdAt: '2023-09-10T14:00:00Z' },
+    { id: 4, name: 'Căn Studio (35m2)', type: 'Căn hộ', area: 35, bedrooms: 1, bathrooms: 1, createdAt: '2023-10-15T09:00:00Z' },
+    { id: 5, name: 'Nhà phố thương mại 5x20m', type: 'Nhà phố', area: 100, bedrooms: 3, bathrooms: 3, createdAt: '2024-01-20T16:45:00Z' },
+    { id: 6, name: 'Căn 3PN (98m2) - Căn góc', type: 'Căn hộ', area: 98, bedrooms: 3, bathrooms: 2, createdAt: '2024-03-22T12:00:00Z' },
 ];
 
 const mockProjectAgencies = [
     { projectId: 1, agencyId: 2 },
     { projectId: 1, agencyId: 4 },
-];
-
-const mockUnits = [
-    { id: 1, blockId: 1, floor: 5, code: 'S1.01-0501', type: 'Căn hộ 2PN', area: 75, status: 'Còn trống', price: '3.5 tỷ' },
-    { id: 2, blockId: 1, floor: 5, code: 'S1.01-0502', type: 'Căn hộ 1PN+1', area: 55, status: 'Đã cọc', price: '2.8 tỷ' },
-    { id: 3, blockId: 1, floor: 6, code: 'S1.01-0601', type: 'Căn hộ 2PN', area: 75, status: 'Đã bán', price: '3.6 tỷ' },
-    { id: 4, blockId: 1, floor: 6, code: 'S1.01-0602', type: 'Căn hộ 1PN+1', area: 55, status: 'Còn trống', price: '2.8 tỷ' },
-    { id: 5, blockId: 2, floor: 10, code: 'S2.05-1005', type: 'Căn hộ 3PN', area: 90, status: 'Còn trống', price: '4.5 tỷ' },
-    { id: 6, blockId: 1, floor: 7, code: 'S1.01-0701', type: 'Căn hộ 2PN', area: 75, status: 'Còn trống', price: '3.65 tỷ' },
-    { id: 7, blockId: 1, floor: 7, code: 'S1.01-0702', type: 'Căn hộ 1PN+1', area: 55, status: 'Còn trống', price: '2.85 tỷ' },
-];
-
-const mockIndependentProducts = [
-    { id: 1, projectId: 1, code: 'VILLA-01', type: 'Biệt thự đơn lập', area: 300, status: 'Còn trống' },
-    { id: 2, projectId: 1, code: 'SHOP-A5', type: 'Shophouse góc', area: 120, status: 'Đã bán' },
-    { id: 3, projectId: 2, code: 'VILLA-B2', type: 'Biệt thự song lập', area: 250, status: 'Còn trống' },
 ];
 
 const mockRetailProperties = [
@@ -70,9 +57,9 @@ const mockTransactions = [
 ];
 
 const mockLivestreams = [
-    { id: 1, title: 'Mở bán dự án The 9 Stellars', startTime: '2024-08-15T19:00', youtubeLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
-    { id: 2, title: 'Giới thiệu dự án Masteri', startTime: '2024-08-20T10:00', youtubeLink: 'https://youtu.be/dQw4w9WgXcQ' },
-    { id: 3, title: 'Hỏi đáp cùng chuyên gia (Đã diễn ra)', startTime: '2024-07-25T14:00', youtubeLink: 'https://youtube.com/live/someid' },
+    { id: 1, title: 'Mở bán dự án The 9 Stellars', startTime: '2024-08-15T19:00', youtubeLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', relatedProducts: [5] },
+    { id: 2, title: 'Giới thiệu dự án Masteri', startTime: '2024-08-20T10:00', youtubeLink: 'https://youtu.be/dQw4w9WgXcQ', relatedProducts: [] },
+    { id: 3, title: 'Hỏi đáp cùng chuyên gia (Đã diễn ra)', startTime: '2024-07-25T14:00', youtubeLink: 'https://youtube.com/live/someid', relatedProducts: [1, 2, 3] },
 ];
 
 const mockConversations = [
@@ -95,10 +82,11 @@ const mockMessages = {
     ]
 };
 
-const formatDate = (dateString) => {
+const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     try {
         const date = new Date(dateString);
+        // FIX: Add Intl.DateTimeFormatOptions type to the options object to fix type error.
         const options: Intl.DateTimeFormatOptions = {
             hour: '2-digit',
             minute: '2-digit',
@@ -113,7 +101,7 @@ const formatDate = (dateString) => {
 };
 
 // --- ICONS ---
-const Icon = ({ path, size = 22, style }: { path: React.ReactNode; size?: number; style?: React.CSSProperties }) => (
+const Icon = ({ path, size = 22, style = {} }: {path: React.ReactNode, size?: number, style?: React.CSSProperties}) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         width={size}
@@ -138,13 +126,14 @@ const LivestreamIcon = () => <Icon path={<><polygon points="23 7 16 12 23 17 23 
 const InboxIcon = () => <Icon path={<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></>} />;
 const ChevronLeftIcon = () => <Icon path={<polyline points="15 18 9 12 15 6"></polyline>} />;
 const ChevronRightIcon = () => <Icon path={<polyline points="9 18 15 12 9 6"></polyline>} />;
-const TrashIcon = () => <Icon path={<polyline points="3 6 5 6 21 6"></polyline>} size={18} />;
+const TrashIcon = () => <Icon path={<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>} size={18} />;
 const EditIcon = () => <Icon path={<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>} size={18} />;
-const XIcon = () => <Icon path={<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>} size={20} />;
+const XIcon = ({ size = 20 }) => <Icon path={<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>} size={size} />;
 const DownloadIcon = () => <Icon path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></>} size={18} />;
 
 
 // --- STYLES ---
+// FIX: Add type annotation to fix multiple CSS property type errors throughout the file.
 const styles: { [key: string]: React.CSSProperties } = {
     appContainer: {
         display: 'flex',
@@ -575,7 +564,7 @@ const styles: { [key: string]: React.CSSProperties } = {
 
 // --- COMPONENTS ---
 
-const ToggleSwitch = ({ checked, onChange }) => {
+const ToggleSwitch = ({ checked, onChange }: { checked: boolean, onChange: () => void }) => {
     return (
         <div style={styles.toggleSwitch} onClick={onChange}>
             <div style={{...styles.toggleSwitchSlider, backgroundColor: checked ? 'var(--button-bg)' : '#ccc'}}></div>
@@ -584,22 +573,14 @@ const ToggleSwitch = ({ checked, onChange }) => {
     );
 };
 
-const Sidebar = ({ activeView, setView, isCollapsed, setCollapsed }: { activeView: View; setView: (view: View) => void; isCollapsed: boolean; setCollapsed: (isCollapsed: boolean) => void; }) => {
-    const [isProductsOpen, setProductsOpen] = useState(activeView.startsWith('products.'));
-
-    const handleNavClick = (view: View) => {
-        if (view === 'products.projects' || view === 'products.retail') {
-            setProductsOpen(true);
-        }
+const Sidebar = ({ activeView, setView, isCollapsed, setCollapsed }: { activeView: string, setView: (view: string) => void, isCollapsed: boolean, setCollapsed: (isCollapsed: boolean) => void }) => {
+    const handleNavClick = (view: string) => {
         setView(view);
     };
 
-    const toggleProductsMenu = () => {
+    const handleProductsMenuClick = () => {
         if (isCollapsed) {
             setCollapsed(false);
-            setProductsOpen(true);
-        } else {
-            setProductsOpen(!isProductsOpen);
         }
     };
 
@@ -609,7 +590,10 @@ const Sidebar = ({ activeView, setView, isCollapsed, setCollapsed }: { activeVie
         {
             id: 'products', label: 'Sản phẩm', icon: <ProductsIcon />, subItems: [
                 { id: 'products.projects', label: 'Dự án' },
-                { id: 'products.retail', label: 'Bất động sản lẻ' },
+                { id: 'products.subdivisions', label: 'Phân khu' },
+                { id: 'products.buildings', label: 'Khối BĐS' },
+                { id: 'products.unittypes', label: 'Mẫu nhà' },
+                { id: 'products.properties', label: 'Bất động sản' },
             ]
         },
         { id: 'transactions', label: 'Giao dịch', icon: <TransactionIcon /> },
@@ -644,8 +628,9 @@ const Sidebar = ({ activeView, setView, isCollapsed, setCollapsed }: { activeVie
                                 ...navItemStyle(isCollapsed),
                                 backgroundColor: activeView === item.id || (item.id === 'products' && activeView.startsWith('products.')) ? 'var(--active-item-bg)' : 'transparent',
                                 fontWeight: activeView === item.id || (item.id === 'products' && activeView.startsWith('products.')) ? 600 : 500,
+                                cursor: (item.id === 'products' && !isCollapsed) ? 'default' : 'pointer',
                             }}
-                            onClick={() => item.subItems ? toggleProductsMenu() : handleNavClick(item.id as View)}
+                            onClick={() => item.subItems ? handleProductsMenuClick() : handleNavClick(item.id)}
                             role="button"
                             aria-current={activeView === item.id}
                             title={isCollapsed ? item.label : ''}
@@ -653,7 +638,7 @@ const Sidebar = ({ activeView, setView, isCollapsed, setCollapsed }: { activeVie
                             {item.icon}
                             {!isCollapsed && <span>{item.label}</span>}
                         </div>
-                        {!isCollapsed && item.subItems && isProductsOpen && (
+                        {!isCollapsed && item.subItems && (
                             <div>
                                 {item.subItems.map(subItem => (
                                     <div
@@ -663,7 +648,7 @@ const Sidebar = ({ activeView, setView, isCollapsed, setCollapsed }: { activeVie
                                             backgroundColor: activeView === subItem.id ? 'var(--active-item-bg)' : 'transparent',
                                             fontWeight: activeView === subItem.id ? 600 : 400,
                                         }}
-                                        onClick={() => handleNavClick(subItem.id as View)}
+                                        onClick={() => handleNavClick(subItem.id)}
                                         role="button"
                                     >
                                         {subItem.label}
@@ -705,10 +690,14 @@ const DashboardView = () => (
     </div>
 );
 
-const AddUserModal = ({ isOpen, onClose, onAddUser }) => {
+const AddUserModal = ({ isOpen, onClose, onAddUser }: { isOpen: boolean, onClose: () => void, onAddUser: (user: any) => void }) => {
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [name, setName] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [email, setEmail] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [phone, setPhone] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [role, setRole] = useState('Môi giới');
 
     if (!isOpen) return null;
@@ -764,9 +753,13 @@ const AddUserModal = ({ isOpen, onClose, onAddUser }) => {
 
 
 const UserManagementView = () => {
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [users, setUsers] = useState(mockUsers);
-    const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [selectedUserIds, setSelectedUserIds] = useState(new Set());
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [bulkActionRole, setBulkActionRole] = useState('Môi giới');
 
     const handleSelectUser = (userId: number) => {
@@ -789,7 +782,7 @@ const UserManagementView = () => {
         }
     };
     
-    const handleAddUser = (newUser) => {
+    const handleAddUser = (newUser: any) => {
         setUsers(prevUsers => [{ ...newUser, id: Date.now() }, ...prevUsers]);
     };
 
@@ -877,25 +870,52 @@ const UserManagementView = () => {
     );
 };
 
-const AddProjectView = ({ onAddProject, setView }) => {
+const AddProjectView = ({ onAddProject, setView }: { onAddProject: (project: any) => void, setView: (view: string) => void }) => {
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [name, setName] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [investor, setInvestor] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [managementUnit, setManagementUnit] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [address, setAddress] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [coordinates, setCoordinates] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [description, setDescription] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [landArea, setLandArea] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [buildArea, setBuildArea] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [email, setEmail] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [phone, setPhone] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [facebook, setFacebook] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [tiktok, setTiktok] = useState('');
-    const [thumbnail, setThumbnail] = useState<File | null>(null);
-    const [gallery, setGallery] = useState<FileList | null>(null);
-    const [infoPdf, setInfoPdf] = useState<File | null>(null);
-    const [masterPlan, setMasterPlan] = useState<File | null>(null);
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [thumbnail, setThumbnail] = useState(null);
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [gallery, setGallery] = useState(null);
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [infoPdf, setInfoPdf] = useState(null);
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [masterPlan, setMasterPlan] = useState(null);
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [status, setStatus] = useState('Đang cập nhật');
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [isVisible, setIsVisible] = useState(true);
+
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [startMonth, setStartMonth] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [startYear, setStartYear] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [handoverMonth, setHandoverMonth] = useState('');
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [handoverYear, setHandoverYear] = useState('');
 
     const STATUS_OPTIONS = [
         "Đang cập nhật",
@@ -930,6 +950,11 @@ const AddProjectView = ({ onAddProject, setView }) => {
         });
     };
 
+    const currentYear = new Date().getFullYear();
+    const yearOptions = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i).reverse();
+    const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1);
+
+
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -962,15 +987,36 @@ const AddProjectView = ({ onAddProject, setView }) => {
                             <input type="text" style={styles.formInput} value={managementUnit} onChange={e => setManagementUnit(e.target.value)} />
                         </div>
                     </div>
-                    <div style={styles.formGrid}>
+                     <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Ảnh đại diện</label>
+                        <input type="file" style={styles.formInput} accept="image/*" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setThumbnail(e.target.files ? e.target.files[0] : null)} />
+                    </div>
+                </div>
+
+                {/* Section: Location Info */}
+                 <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>Thông tin vị trí</h3>
+                     <div style={{...styles.formGroup, marginBottom: '15px'}}>
+                        <label style={styles.formLabel}>Địa chỉ dự án</label>
+                        <input type="text" style={styles.formInput} value={address} onChange={e => setAddress(e.target.value)} />
+                    </div>
+                    <div style={{...styles.formGrid, gridTemplateColumns: '1fr 1fr 1fr', marginBottom: '15px' }}>
                         <div style={{...styles.formGroup, marginBottom: 0}}>
-                            <label style={styles.formLabel}>Địa chỉ dự án</label>
-                            <input type="text" style={styles.formInput} value={address} onChange={e => setAddress(e.target.value)} />
+                             <label style={styles.formLabel}>Tỉnh/Thành phố</label>
+                             <select style={styles.formInput}><option>-- Chọn Tỉnh/Thành phố --</option><option>TP. Hồ Chí Minh</option><option>Hà Nội</option></select>
                         </div>
                         <div style={{...styles.formGroup, marginBottom: 0}}>
-                            <label style={styles.formLabel}>Tọa độ</label>
-                            <input type="text" style={styles.formInput} value={coordinates} onChange={e => setCoordinates(e.target.value)} placeholder="e.g., 10.7769, 106.7009"/>
+                             <label style={styles.formLabel}>Quận/Huyện</label>
+                             <select style={styles.formInput}><option>-- Chọn Quận/Huyện --</option><option>Quận 9</option><option>Quận 2</option></select>
                         </div>
+                         <div style={{...styles.formGroup, marginBottom: 0}}>
+                             <label style={styles.formLabel}>Phường/Xã</label>
+                             <select style={styles.formInput}><option>-- Chọn Phường/Xã --</option><option>Phường Long Thạnh Mỹ</option></select>
+                        </div>
+                    </div>
+                    <div style={{...styles.formGroup, marginBottom: 0}}>
+                        <label style={styles.formLabel}>Tọa độ</label>
+                        <input type="text" style={styles.formInput} value={coordinates} onChange={e => setCoordinates(e.target.value)} placeholder="e.g., 10.7769, 106.7009"/>
                     </div>
                 </div>
 
@@ -994,6 +1040,34 @@ const AddProjectView = ({ onAddProject, setView }) => {
                             <input type="number" style={styles.formInput} value={buildArea} onChange={e => setBuildArea(e.target.value)} />
                         </div>
                     </div>
+                     <div style={styles.formGrid}>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Thời gian khởi công</label>
+                            <div style={{display: 'flex', gap: '10px'}}>
+                               <select style={styles.formInput} value={startMonth} onChange={e => setStartMonth(e.target.value)}>
+                                    <option value="">Tháng</option>
+                                    {monthOptions.map(m => <option key={m} value={m}>{m}</option>)}
+                                </select>
+                                <select style={styles.formInput} value={startYear} onChange={e => setStartYear(e.target.value)}>
+                                    <option value="">Năm</option>
+                                    {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Thời gian bàn giao</label>
+                            <div style={{display: 'flex', gap: '10px'}}>
+                                <select style={styles.formInput} value={handoverMonth} onChange={e => setHandoverMonth(e.target.value)}>
+                                     <option value="">Tháng</option>
+                                    {monthOptions.map(m => <option key={m} value={m}>{m}</option>)}
+                                </select>
+                                <select style={styles.formInput} value={handoverYear} onChange={e => setHandoverYear(e.target.value)}>
+                                     <option value="">Năm</option>
+                                    {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <div style={styles.formGroup}>
                         <label style={styles.formLabel}>Trạng thái dự án</label>
                         <select style={styles.formInput} value={status} onChange={e => setStatus(e.target.value)}>
@@ -1002,26 +1076,20 @@ const AddProjectView = ({ onAddProject, setView }) => {
                     </div>
                     <div style={styles.formGroup}>
                         <label style={styles.formLabel}>File thông tin đính kèm (pdf)</label>
-                        <input type="file" style={styles.formInput} accept=".pdf" onChange={e => setInfoPdf(e.target.files ? e.target.files[0] : null)} />
+                        <input type="file" style={styles.formInput} accept=".pdf" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInfoPdf(e.target.files ? e.target.files[0] : null)} />
                     </div>
                 </div>
 
                 {/* Section 3: Images */}
                 <div style={styles.formSection}>
                      <h3 style={styles.formSectionHeader}>Hình ảnh</h3>
-                     <div style={styles.formGroup}>
+                     <div style={{...styles.formGroup, marginBottom: '15px'}}>
                         <label style={styles.formLabel}>Mặt bằng tổng thể dự án</label>
-                        <input type="file" style={styles.formInput} accept="image/*" onChange={e => setMasterPlan(e.target.files ? e.target.files[0] : null)} />
+                        <input type="file" style={styles.formInput} accept="image/*" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMasterPlan(e.target.files ? e.target.files[0] : null)} />
                      </div>
-                     <div style={styles.formGrid}>
-                         <div style={styles.formGroup}>
-                            <label style={styles.formLabel}>Ảnh thumbnail</label>
-                            <input type="file" style={styles.formInput} accept="image/*" onChange={e => setThumbnail(e.target.files ? e.target.files[0] : null)} />
-                        </div>
-                        <div style={styles.formGroup}>
-                            <label style={styles.formLabel}>Thư viện hình ảnh</label>
-                            <input type="file" multiple style={styles.formInput} accept="image/*" onChange={e => setGallery(e.target.files)} />
-                        </div>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Thư viện hình ảnh</label>
+                        <input type="file" multiple style={styles.formInput} accept="image/*" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGallery(e.target.files)} />
                     </div>
                 </div>
                 
@@ -1054,32 +1122,131 @@ const AddProjectView = ({ onAddProject, setView }) => {
     );
 };
 
-const ProjectManagementView = ({ projects, setView, onToggleVisibility, onEditProject }) => {
+const ProjectManagementView = ({
+    projects,
+    setView,
+    onToggleVisibility,
+    onEditProject,
+    onDeleteProject,
+    onBulkDelete,
+    onBulkToggleVisibility,
+}: {
+    projects: any[];
+    setView: (view: string, state?: any) => void;
+    onToggleVisibility: (id: number) => void;
+    onEditProject: (project: any) => void;
+    onDeleteProject: (project: any) => void;
+    onBulkDelete: (ids: Set<number>) => void;
+    onBulkToggleVisibility: (ids: Set<number>, visibility: boolean) => void;
+}) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [selectedIds, setSelectedIds] = useState(new Set<number>());
+
+    const filteredProjects = useMemo(() => {
+        return projects.filter(p => {
+            const nameMatch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const statusMatch = statusFilter === 'all' || p.status === statusFilter;
+            return nameMatch && statusMatch;
+        });
+    }, [projects, searchTerm, statusFilter]);
+
+    const handleSelectRow = (id: number) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+    };
+    
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(new Set(filteredProjects.map(p => p.id)));
+        } else {
+            setSelectedIds(new Set());
+        }
+    };
+
+    const handleBulkDeleteClick = () => {
+        onBulkDelete(selectedIds);
+        setSelectedIds(new Set());
+    };
+    
+    const handleBulkVisibilityClick = (visibility: boolean) => {
+        onBulkToggleVisibility(selectedIds, visibility);
+        setSelectedIds(new Set());
+    };
+
+    const isAllSelected = selectedIds.size > 0 && selectedIds.size === filteredProjects.length;
+
+    const uniqueStatuses = [...new Set(mockProjects.map(p => p.status))];
+
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h2 style={{...styles.header, marginBottom: 0}}>Quản lý Dự án</h2>
-                <button style={styles.button} onClick={() => setView('products.projects.add')}>Thêm dự án</button>
+                <div>
+                     <button 
+                        style={{...styles.actionButton, padding: '10px 15px', marginRight: '10px'}} 
+                        onClick={() => alert('Chức năng import sẽ được bổ sung sau.')}>
+                            <DownloadIcon/> Import (CSV)
+                     </button>
+                     <button style={styles.button} onClick={() => setView('products.projects.add')}>Tạo dự án mới</button>
+                </div>
             </div>
+
+            <div style={{...styles.tableContainer, padding: '15px', marginBottom: '20px', backgroundColor: '#f8f9fa', border: '1px solid var(--border-color)', boxShadow: 'none'}}>
+                <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '15px' }}>
+                    <input 
+                        type="text" 
+                        placeholder="Tìm theo tên dự án..." 
+                        style={styles.formInput}
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                    />
+                     <select style={styles.formInput} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                        <option value="all">Tất cả trạng thái</option>
+                        {uniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            {selectedIds.size > 0 && (
+                <div style={styles.bulkActionToolbar}>
+                    <span style={{ fontWeight: 600 }}>{selectedIds.size} đã chọn</span>
+                    <button style={styles.actionButton} onClick={handleBulkDeleteClick}><TrashIcon/> Xóa</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                       <span style={{fontWeight: 500}}>Cài đặt hiển thị:</span>
+                       <button style={{...styles.actionButton, padding: '8px 12px'}} onClick={() => handleBulkVisibilityClick(true)}>Hiện</button>
+                       <button style={{...styles.actionButton, padding: '8px 12px'}} onClick={() => handleBulkVisibilityClick(false)}>Ẩn</button>
+                    </div>
+                </div>
+            )}
+            
             <div style={styles.tableContainer}>
                 <table style={styles.table}>
                     <thead>
                         <tr>
+                            <th style={{...styles.th, width: '50px' }}>
+                                <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
+                            </th>
                             <th style={styles.th}>Tên dự án</th>
-                            <th style={styles.th}>Chủ đầu tư</th>
-                            <th style={styles.th}>Vị trí</th>
-                            <th style={styles.th}>Trạng thái</th>
+                            <th style={styles.th}>Trạng thái giao dịch</th>
+                            <th style={styles.th}>Ngày tạo</th>
                             <th style={styles.th}>Hiển thị</th>
                             <th style={styles.th}>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {projects.map(project => (
-                            <tr key={project.id}>
+                        {filteredProjects.map(project => (
+                            <tr key={project.id} style={{backgroundColor: selectedIds.has(project.id) ? 'var(--active-item-bg)' : 'transparent'}}>
+                                <td style={styles.td}>
+                                    <input type="checkbox" checked={selectedIds.has(project.id)} onChange={() => handleSelectRow(project.id)} />
+                                </td>
                                 <td style={{...styles.td, cursor: 'pointer', fontWeight: 500}} onClick={() => onEditProject(project)}>{project.name}</td>
-                                <td style={styles.td}>{project.investor}</td>
-                                <td style={styles.td}>{project.location}</td>
                                 <td style={styles.td}>{project.status}</td>
+                                <td style={styles.td}>{formatDate(project.createdAt).split(',')[1]}</td>
                                 <td style={styles.td}>
                                     <ToggleSwitch 
                                         checked={project.visible} 
@@ -1088,7 +1255,7 @@ const ProjectManagementView = ({ projects, setView, onToggleVisibility, onEditPr
                                 </td>
                                 <td style={styles.td}>
                                     <button style={styles.actionButton} onClick={() => onEditProject(project)}>Sửa</button>
-                                    <button style={styles.actionButton}>Xoá</button>
+                                    <button style={styles.actionButton} onClick={() => onDeleteProject(project)}>Xoá</button>
                                 </td>
                             </tr>
                         ))}
@@ -1099,288 +1266,10 @@ const ProjectManagementView = ({ projects, setView, onToggleVisibility, onEditPr
     );
 };
 
-const allAmenities = [
-    "Sảnh Lễ tân & Lounge", "Hồ bơi người lớn", "Hồ bơi trẻ em", "Jacuzzi",
-    "Sân tắm nắng", "Khu BBQ ngoài trời", "Sân chơi trẻ em", "Phòng Gym",
-    "Phòng Yoga/Thiền", "Phòng xông hơi", "Phòng sinh hoạt cộng đồng",
-    "Thư viện/Phòng đọc", "Vườn trên mái", "Đường dạo bộ nội khu",
-    "An ninh 24/7", "Hệ thống Camera giám sát", "Bãi đỗ xe thông minh",
-    "Hệ thống PCCC tiêu chuẩn", "Máy phát điện dự phòng 100%", "Internet tốc độ cao"
-];
-
-const AmenitiesModal = ({ isOpen, onClose, selectedAmenities, onSave }) => {
-    if (!isOpen) return null;
-
-    const [searchTerm, setSearchTerm] = useState('');
-    const [currentSelection, setCurrentSelection] = useState(new Set(selectedAmenities));
-
-    const handleToggle = (amenity) => {
-        setCurrentSelection(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(amenity)) {
-                newSet.delete(amenity);
-            } else {
-                newSet.add(amenity);
-            }
-            return newSet;
-        });
-    };
-
-    const handleSave = () => {
-        onSave(Array.from(currentSelection));
-        onClose();
-    };
-
-    const filteredAmenities = allAmenities.filter(a =>
-        a.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    
-    const modalContentStyle: React.CSSProperties = {
-        ...styles.modalContent,
-        maxWidth: '600px',
-    };
-    
-    const amenitiesListStyle: React.CSSProperties = {
-        maxHeight: '40vh',
-        overflowY: 'auto',
-        border: '1px solid var(--border-color)',
-        borderRadius: '6px',
-        padding: '10px',
-    };
-
-    const amenityItemStyle: React.CSSProperties = {
-        display: 'flex',
-        alignItems: 'center',
-        padding: '8px',
-        cursor: 'pointer',
-        borderRadius: '4px',
-    };
-
-    return (
-        <div style={styles.modalBackdrop} onClick={onClose}>
-            <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
-                <h3 style={styles.modalHeader}>Chọn tiện ích nội khu</h3>
-                <button style={styles.modalCloseButton} onClick={onClose}><XIcon /></button>
-                <div style={styles.formGroup}>
-                    <input 
-                        type="text" 
-                        placeholder="Tìm kiếm tiện ích..." 
-                        style={styles.formInput} 
-                        value={searchTerm} 
-                        onChange={e => setSearchTerm(e.target.value)} 
-                    />
-                </div>
-                <div style={amenitiesListStyle}>
-                    {filteredAmenities.map(amenity => (
-                        <div 
-                            key={amenity} 
-                            style={amenityItemStyle} 
-                            onClick={() => handleToggle(amenity)}
-                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--active-item-bg)')}
-                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                        >
-                            <input 
-                                type="checkbox" 
-                                style={{marginRight: '10px', width: '16px', height: '16px'}}
-                                checked={currentSelection.has(amenity)} 
-                                readOnly
-                            />
-                            <label>{amenity}</label>
-                        </div>
-                    ))}
-                </div>
-                <div style={styles.formFooter}>
-                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={onClose}>Hủy</button>
-                    <button style={styles.button} onClick={handleSave}>Lưu ({currentSelection.size})</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
-const AddBlockView = ({ project, setView, onAddBlock }) => {
-    const projectSubdivisions = mockSubdivisions.filter(s => s.projectId === project.id);
-    
-    // General Info State
-    const [subdivisionId, setSubdivisionId] = useState('');
-    const [blockName, setBlockName] = useState('');
-    const [blockCode, setBlockCode] = useState('');
-    const [blockType, setBlockType] = useState('');
-    const [status, setStatus] = useState('Sắp mở bán');
-    const [completionYear, setCompletionYear] = useState(new Date().getFullYear() + 2);
-    const [managementUnit, setManagementUnit] = useState('');
-    const [description, setDescription] = useState('');
-    const [selectedAmenities, setSelectedAmenities] = useState([]);
-    const [isAmenitiesModalOpen, setIsAmenitiesModalOpen] = useState(false);
-
-    // Technical Specs State
-    const [techSpecs, setTechSpecs] = useState({});
-
-    const handleTechSpecChange = (field, value) => {
-        setTechSpecs(prev => ({...prev, [field]: value}));
-    };
-
-    const BLOCK_TYPE_OPTIONS = [
-        "Tòa chung cư", 
-        "Tòa Condotel", 
-        "Khu biệt thự", 
-        "Khu nhà liền kề", 
-        "Khu Shophouse"
-    ];
-
-    const STATUS_OPTIONS = [
-        "Sắp mở bán", 
-        "Đang mở bán", 
-        "Đã bàn giao", 
-        "Đã bán hết"
-    ];
-
-    const handleSubmit = () => {
-        if (!blockName || !blockType) {
-            alert('Vui lòng điền các trường bắt buộc: Tên khối, Loại hình.');
-            return;
-        }
-        const newBlock = {
-            projectId: project.id,
-            subdivisionId: subdivisionId ? parseInt(String(subdivisionId), 10) : null,
-            name: blockName,
-            code: blockCode,
-            type: blockType,
-            status,
-            completionYear,
-            managementUnit,
-            description,
-            amenities: selectedAmenities,
-            ...techSpecs,
-        };
-        onAddBlock(newBlock);
-    };
-    
-    const renderTechSpecs = () => {
-        const isApartment = blockType === "Tòa chung cư" || blockType === "Tòa Condotel";
-        const isVilla = blockType === "Khu biệt thự";
-        const isTownhouse = blockType === "Khu nhà liền kề";
-        const isShophouse = blockType === "Khu Shophouse";
-
-        if (!blockType) return null;
-
-        return (
-            <>
-                {isApartment && (
-                     <div style={styles.formGrid}>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Số tầng nổi</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('floorsAboveGround', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Số tầng hầm</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('basementFloors', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Số tầng căn hộ</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('apartmentFloors', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Số lượng căn hộ mỗi tầng</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('unitsPerFloor', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Số lượng căn hộ</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('totalUnits', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Số lượng thang máy</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('elevators', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích khu đất (khối đế) (m²)</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('podiumArea', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích sàn xây dựng (m²)</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('gfa', e.target.value)} /></div>
-                    </div>
-                )}
-                {(isVilla || isTownhouse || isShophouse) && (
-                     <div style={styles.formGrid}>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Tổng diện tích khu đất</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('totalLandArea', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Mật độ xây dựng</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('buildingDensity', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Tổng số căn</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('totalVillas', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích cây xanh và mặt nước</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('greenArea', e.target.value)} /></div>
-                     </div>
-                )}
-                 {(isTownhouse || isShophouse) && (
-                     <div style={styles.formGrid}>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Bề rộng mặt tiền (điển hình)</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('facadeWidth', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Số tầng xây dựng (điển hình)</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('typicalFloors', e.target.value)} /></div>
-                     </div>
-                )}
-                {isShophouse && (
-                     <div style={styles.formGrid}>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Chiều cao trần Tầng 1</label><input type="number" style={styles.formInput} onChange={e => handleTechSpecChange('floor1CeilingHeight', e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Thiết kế Lối đi</label><input type="text" style={styles.formInput} onChange={e => handleTechSpecChange('walkwayDesign', e.target.value)} /></div>
-                        <div style={{...styles.formGroup, gridColumn: 'span 2'}}><label style={styles.formLabel}>Quy hoạch Bãi đỗ xe (Cho khách)</label><input type="text" style={styles.formInput} onChange={e => handleTechSpecChange('guestParking', e.target.value)} /></div>
-                     </div>
-                )}
-            </>
-        );
-    };
-
-
-    return (
-        <div>
-            <AmenitiesModal 
-                isOpen={isAmenitiesModalOpen}
-                onClose={() => setIsAmenitiesModalOpen(false)}
-                selectedAmenities={selectedAmenities}
-                onSave={setSelectedAmenities}
-            />
-            <div style={{ marginBottom: '20px' }}>
-                <button onClick={() => setView('products.projects.detail')} style={{...styles.actionButton, border: 'none', padding: '5px 0', marginBottom: '10px'}}>
-                    &larr; Quay lại chi tiết dự án
-                </button>
-                <h2 style={{...styles.header, marginBottom: 0 }}>Tạo khối bất động sản mới</h2>
-            </div>
-             <div style={styles.formPageContainer}>
-                {/* Section 1: General Info */}
-                <div style={styles.formSection}>
-                    <h3 style={styles.formSectionHeader}>Thông tin chung</h3>
-                    <div style={styles.formGrid}>
-                        <div style={{...styles.formGroup, gridColumn: 'span 2'}}><label style={styles.formLabel}>Tên thương mại</label><input type="text" style={styles.formInput} value={blockName} onChange={e => setBlockName(e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Thuộc phân khu nào</label><select style={styles.formInput} value={subdivisionId} onChange={e => setSubdivisionId(e.target.value)}><option value="">-- Không thuộc phân khu nào --</option>{projectSubdivisions.map(sub => <option key={sub.id} value={sub.id}>{sub.name}</option>)}</select></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Mã khối</label><input type="text" style={styles.formInput} value={blockCode} onChange={e => setBlockCode(e.target.value)} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Loại hình</label><select style={styles.formInput} value={blockType} onChange={e => setBlockType(e.target.value)}><option value="" disabled>-- Chọn loại hình --</option>{BLOCK_TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Năm hoàn thành</label><input type="number" style={styles.formInput} value={completionYear} onChange={e => setCompletionYear(parseInt(e.target.value, 10))} /></div>
-                    </div>
-                     <div style={styles.formGroup}><label style={styles.formLabel}>Đơn vị quản lý vận hành</label><input type="text" style={styles.formInput} value={managementUnit} onChange={e => setManagementUnit(e.target.value)} /></div>
-                     <div style={styles.formGroup}>
-                        <label style={styles.formLabel}>Mô tả</label>
-                        <div style={styles.richTextContainer}>
-                            <div style={styles.richTextToolbar}>Bold, Italic, Underline... (Rich text support)</div>
-                            <textarea style={styles.richTextEditor} value={description} onChange={e => setDescription(e.target.value)}></textarea>
-                        </div>
-                    </div>
-                    <div style={styles.formGrid}>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Ảnh đại diện</label><input type="file" accept="image/*" style={styles.formInput} /></div>
-                        <div style={styles.formGroup}><label style={styles.formLabel}>Thư viện ảnh</label><input type="file" multiple accept="image/*" style={styles.formInput} /></div>
-                    </div>
-                    <div style={styles.formGroup}><label style={styles.formLabel}>File đính kèm (PDF)</label><input type="file" accept=".pdf" style={styles.formInput} /></div>
-                    <div style={styles.formGroup}>
-                        <label style={styles.formLabel}>Tiện ích nội khu</label>
-                        <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center'}}>
-                             {selectedAmenities.length > 0 && selectedAmenities.map(amenity => (
-                                <span key={amenity} style={{backgroundColor: 'var(--active-item-bg)', padding: '5px 10px', borderRadius: '15px', fontSize: '13px'}}>{amenity}</span>
-                             ))}
-                            <button onClick={() => setIsAmenitiesModalOpen(true)} style={{...styles.actionButton, padding: '5px 15px'}}>Chọn tiện ích...</button>
-                        </div>
-                    </div>
-                    <div style={styles.formGroup}>
-                        <label style={styles.formLabel}>Tình trạng</label>
-                        <select style={styles.formInput} value={status} onChange={e => setStatus(e.target.value)}>
-                            {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                    </div>
-                </div>
-
-                {/* Section 2: Technical Specifications (Conditional) */}
-                {blockType && (
-                    <div style={styles.formSection}>
-                        <h3 style={styles.formSectionHeader}>Thông số Kỹ thuật</h3>
-                        {renderTechSpecs()}
-                    </div>
-                )}
-                
-                <div style={styles.formFooter}>
-                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={() => setView('products.projects.detail')}>Hủy</button>
-                    <button style={styles.button} onClick={handleSubmit}>Lưu</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 
 // --- PROJECT DETAIL VIEW AND TABS ---
 
-const OverviewTab = ({ project }) => {
+const OverviewTab = ({ project }: { project: any }) => {
     // In a real app, you would manage state for each field to make them editable.
     // For this example, we'll just display the data in form inputs.
     const STATUS_OPTIONS = [
@@ -1459,7 +1348,7 @@ const OverviewTab = ({ project }) => {
                  </div>
                  <div style={styles.formGrid}>
                      <div style={styles.formGroup}>
-                        <label style={styles.formLabel}>Ảnh thumbnail</label>
+                        <label style={styles.formLabel}>Ảnh đại diện</label>
                         <input type="file" style={styles.formInput} />
                     </div>
                     <div style={styles.formGroup}>
@@ -1501,6 +1390,25 @@ const OverviewTab = ({ project }) => {
     );
 };
 
+// FIX: Add a props interface with optional properties to fix missing props errors.
+interface TabularDataManagementProps {
+    title: string;
+    columns: { key: string; label: string; render?: (row: any) => React.ReactNode }[];
+    data: any[];
+    description?: string;
+    onAdd?: () => void;
+    onEdit?: (row: any) => void;
+    onImport?: () => void;
+    onDelete?: (row: any) => void;
+    onBulkDelete?: () => void;
+    selectedIds?: Set<any>;
+    onSelectRow?: (id: any) => void;
+    onSelectAll?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    isAllSelected?: boolean;
+    renderActions?: (row: any) => React.ReactNode;
+    renderToolbar?: () => React.ReactNode;
+}
+
 const TabularDataManagement = ({
     title,
     columns,
@@ -1516,55 +1424,70 @@ const TabularDataManagement = ({
     isAllSelected,
     description,
     renderActions,
-}) => {
+    renderToolbar,
+}: TabularDataManagementProps) => {
     const hasSelection = selectedIds && selectedIds.size > 0;
     const hasActions = onEdit || onDelete || renderActions;
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                {hasSelection ? (
-                    <div style={{...styles.bulkActionToolbar, width: '100%', justifyContent: 'flex-start', margin: 0}}>
-                         <span style={{ fontWeight: 600 }}>{selectedIds.size} đã chọn</span>
-                         <button style={styles.actionButton} onClick={onBulkDelete}><TrashIcon/> Xóa</button>
-                    </div>
-                ) : (
-                    <>
-                        <div>
-                             <h3 style={{ margin: 0, fontSize: '20px' }}>{title}</h3>
-                             {description && <p style={{margin: '5px 0 0 0', fontSize: '14px', color: 'var(--text-secondary)', maxWidth: '600px', lineHeight: 1.4}}>{description}</p>}
+            {title && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                    {hasSelection ? (
+                        <div style={{...styles.bulkActionToolbar, width: '100%', justifyContent: 'flex-start', margin: 0}}>
+                             <span style={{ fontWeight: 600 }}>{selectedIds.size} đã chọn</span>
+                             {onBulkDelete && <button style={styles.actionButton} onClick={onBulkDelete}><TrashIcon/> Xóa</button>}
                         </div>
-                        <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
-                            {onImport && <button style={{...styles.button, backgroundColor: '#f8f9fa', color: 'var(--text-color)', border: '1px solid var(--border-color)'}} onClick={onImport}>Import</button>}
-                            {onAdd && <button style={styles.button} onClick={onAdd}>Thêm mới</button>}
-                        </div>
-                    </>
-                )}
-            </div>
+                    ) : (
+                        <>
+                            <div>
+                                 <h3 style={{ margin: 0, fontSize: '20px' }}>{title}</h3>
+                                 {description && <p style={{margin: '5px 0 0 0', fontSize: '14px', color: 'var(--text-secondary)'}}>{description}</p>}
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                {renderToolbar ? renderToolbar() : (
+                                    <>
+                                    {onImport && <button style={{...styles.actionButton, padding: '10px 15px'}} onClick={onImport}><DownloadIcon/> Tải lên (CSV)</button>}
+                                    {onAdd && <button style={styles.button} onClick={onAdd}>Thêm mới</button>}
+                                    </>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
             <div style={styles.tableContainer}>
                 <table style={styles.table}>
                     <thead>
                         <tr>
-                            {onSelectRow && <th style={{...styles.th, width: '50px' }}>
-                                <input type="checkbox" checked={isAllSelected} onChange={onSelectAll} disabled={data.length === 0} />
-                            </th>}
-                            {columns.map(col => <th key={col.key} style={styles.th}>{col.header}</th>)}
+                            {onSelectRow && (
+                                <th style={{...styles.th, width: '50px' }}>
+                                    <input type="checkbox" checked={!!isAllSelected} onChange={onSelectAll} />
+                                </th>
+                            )}
+                            {columns.map(col => <th key={col.key} style={styles.th}>{col.label}</th>)}
                             {hasActions && <th style={styles.th}>Hành động</th>}
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map(item => (
-                            <tr key={item.id} style={{backgroundColor: selectedIds && selectedIds.has(item.id) ? 'var(--active-item-bg)' : 'transparent'}}>
-                                {onSelectRow && <td style={styles.td}>
-                                    <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => onSelectRow(item.id)} />
-                                </td>}
-                                {columns.map(col => <td key={col.key} style={styles.td}>{col.render ? col.render(item) : item[col.key]}</td>)}
+                        {data.map(row => (
+                            <tr key={row.id} style={{backgroundColor: hasSelection && selectedIds.has(row.id) ? 'var(--active-item-bg)' : 'transparent'}}>
+                                {onSelectRow && (
+                                    <td style={styles.td}>
+                                        <input type="checkbox" checked={selectedIds.has(row.id)} onChange={() => onSelectRow(row.id)} />
+                                    </td>
+                                )}
+                                {columns.map(col => (
+                                    <td key={`${row.id}-${col.key}`} style={styles.td}>
+                                        {col.render ? col.render(row) : row[col.key]}
+                                    </td>
+                                ))}
                                 {hasActions && (
                                     <td style={styles.td}>
-                                        {renderActions ? renderActions(item) : (
+                                        {renderActions ? renderActions(row) : (
                                             <>
-                                                {onEdit && <button style={styles.actionButton} onClick={() => onEdit(item)}>Sửa</button>}
-                                                {onDelete && <button style={styles.actionButton} onClick={() => onDelete(item.id)}>Xoá</button>}
+                                                {onEdit && <button style={styles.actionButton} onClick={() => onEdit(row)}>Sửa</button>}
+                                                {onDelete && <button style={styles.actionButton} onClick={() => onDelete(row)}>Xoá</button>}
                                             </>
                                         )}
                                     </td>
@@ -1578,33 +1501,1215 @@ const TabularDataManagement = ({
     );
 };
 
+const LinkedSubdivisionsTab = ({ project }: { project: any }) => {
+    const data = mockSubdivisions.filter(s => s.projectId === project.id);
 
-const SubdivisionTab = ({ projectId }) => {
-    const [subdivisions, setSubdivisions] = useState(mockSubdivisions.filter(s => s.projectId === projectId));
-    const handleAdd = () => {
-        const name = prompt("Nhập tên phân khu:");
-        if (name) {
-            setSubdivisions(prev => [...prev, { id: Date.now(), projectId, name }]);
+    const columns = [
+        { key: 'name', label: 'Tên Phân khu / Khối BĐS' },
+        { key: 'code', label: 'Mã' },
+        { key: 'type', label: 'Loại hình' },
+        { key: 'status', label: 'Trạng thái' },
+    ];
+
+    return (
+        <TabularDataManagement
+            title="Danh sách Phân khu & Khối BĐS liên kết"
+            description="Các phân khu và khối BĐS thuộc dự án này. Quản lý tại các mục tương ứng trong 'Sản phẩm'."
+            columns={columns}
+            data={data}
+        />
+    );
+};
+
+
+const AgenciesTab = ({ project }: { project: any }) => {
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    
+    // FIX: Replace `aistudio.useMemo` with `useMemo`.
+    const agenciesForProject = useMemo(() => {
+        const agencyIds = new Set(mockProjectAgencies.filter(pa => pa.projectId === project.id).map(pa => pa.agencyId));
+        return mockUsers.filter(user => agencyIds.has(user.id));
+    }, [project.id]);
+
+    const data = agenciesForProject;
+    const isAllSelected = selectedIds.size > 0 && selectedIds.size === data.length;
+
+     const handleSelectRow = (id: number) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+    };
+    
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(new Set(data.map(d => d.id)));
+        } else {
+            setSelectedIds(new Set());
         }
     };
+
+    const handleBulkDelete = () => {
+        alert(`Removing ${selectedIds.size} agencies`);
+        setSelectedIds(new Set());
+    };
+    
+    const agencyColumns = [
+        { key: 'name', label: 'Tên đại lý' },
+        { key: 'email', label: 'Email' },
+        { key: 'phone', label: 'Số điện thoại' },
+    ];
+    
+    return (
+        <TabularDataManagement
+            title="Quản lý Đại lý phân phối"
+            description="Thêm hoặc xóa các đại lý được phép phân phối sản phẩm của dự án."
+            columns={agencyColumns}
+            data={data}
+            onAdd={() => alert('Add Agency')}
+            onDelete={(row) => alert(`Remove agency ${row.name}`)}
+            selectedIds={selectedIds}
+            onSelectRow={handleSelectRow}
+            onSelectAll={handleSelectAll}
+            onBulkDelete={handleBulkDelete}
+            isAllSelected={isAllSelected}
+        />
+    );
+};
+
+const ProjectDetailView = ({ project, setView }: { project: any, setView: (view: string) => void }) => {
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [activeTab, setActiveTab] = useState('overview');
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [isVisible, setIsVisible] = useState(project.visible);
+    
+    const tabs = [
+        { id: 'overview', label: 'Tổng quan' },
+        { id: 'linkedSubdivisions', label: 'Phân khu / Khối BĐS' },
+        { id: 'agencies', label: 'Đại lý' },
+    ];
+
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'overview': return <OverviewTab project={project} />;
+            case 'linkedSubdivisions': return <LinkedSubdivisionsTab project={project} />;
+            case 'agencies': return <AgenciesTab project={project} />;
+            default: return null;
+        }
+    };
+    
+    return (
+        <div>
+            <div style={{ marginBottom: '20px' }}>
+                <button onClick={() => setView('products.projects')} style={{...styles.actionButton, border: 'none', padding: '5px 0', marginBottom: '10px'}}>
+                    &larr; Quay lại danh sách dự án
+                </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ ...styles.header, marginBottom: 0 }}>{project.name}</h2>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontWeight: 500 }}>Hiển thị</span>
+                        <ToggleSwitch checked={isVisible} onChange={() => setIsVisible(!isVisible)} />
+                    </div>
+                </div>
+            </div>
+            
+             <div style={styles.tabContainer}>
+                {tabs.map(tab => (
+                    <button 
+                        key={tab.id} 
+                        style={{...styles.tabButton, ...(activeTab === tab.id ? styles.activeTabButton : {})}}
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            <div>{renderTabContent()}</div>
+        </div>
+    );
+};
+
+
+const AddEditSubdivisionBlockView = ({
+    mode, // 'add' or 'edit'
+    item, // The item to edit, null if adding
+    onSave,
+    onCancel,
+    category, // 'subdivision' or 'block'
+    projects = [],
+    subdivisions = [],
+}: {
+    mode: 'add' | 'edit';
+    item: any | null;
+    onSave: (data: any) => void;
+    onCancel: () => void;
+    category: 'subdivision' | 'block';
+    projects?: any[];
+    subdivisions?: any[];
+}) => {
+
+    const [formData, setFormData] = useState(item || {
+        projectId: '',
+        name: '',
+        code: '',
+        type: category === 'block' ? 'Chung cư' : 'Phân khu Căn hộ',
+        status: 'Sắp mở bán',
+        parentSubdivisionId: '',
+        // Block specific
+        floorsAbove: '',
+        floorsBelow: '',
+        apartmentFloors: '',
+        unitCount: '',
+        elevatorCount: '',
+        landArea: '',
+        constructionArea: '',
+        greeneryArea: '',
+        frontageWidth: '',
+        buildingFloors: '',
+        firstFloorCeilingHeight: '',
+        walkwayDesign: '',
+        // Generic
+        description: '',
+        handoverDate: '',
+        category: category,
+    });
+    
+    const handleInputChange = (field: string, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleSubmit = () => {
+        if (!formData.projectId && category === 'subdivision') {
+             alert('Vui lòng chọn một Dự án.');
+             return;
+        }
+        if (!formData.name || !formData.type) {
+            alert('Vui lòng nhập Tên và chọn Loại hình.');
+            return;
+        }
+        onSave(formData);
+    };
+    
+    const SUBDIVISION_TYPES = ["Phân khu Biệt thự", "Phân khu Nhà phố", "Phân khu Căn hộ"];
+    const BUILDING_TYPES = ["Chung cư", "Shophouse", "Liền kề", "Biệt thự", "Officetel", "Condotel"];
+    const TRANSACTION_STATUSES = ["Đang mở bán", "Sắp mở bán", "Đã bán hết", "Đang xây dựng", "Đã bàn giao", "Tạm dừng"];
+
+    // Conditional rendering checks
+    const propertyType = formData.type;
+    const isHighRise = ['Chung cư', 'Condotel', 'Officetel'].includes(propertyType);
+    const isLowRise = ['Liền kề', 'Shophouse', 'Biệt thự'].includes(propertyType);
+
+    // Form for "Phân Khu" (Subdivision)
+    const renderSubdivisionForm = () => (
+        <>
+            <div style={styles.formSection}>
+                <h3 style={styles.formSectionHeader}>A. Thông tin liên kết (Bắt buộc)</h3>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Thuộc Dự án</label>
+                    <select style={styles.formInput} value={formData.projectId} onChange={e => handleInputChange('projectId', e.target.value)}>
+                        <option value="" disabled>-- Chọn dự án --</option>
+                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                </div>
+            </div>
+            <div style={styles.formSection}>
+                <h3 style={styles.formSectionHeader}>B. Thông tin cơ bản</h3>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Tên Phân khu</label>
+                    <input type="text" style={styles.formInput} value={formData.name} onChange={e => handleInputChange('name', e.target.value)} />
+                </div>
+                <div style={styles.formGrid}>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Mã Phân khu</label>
+                        <input type="text" style={styles.formInput} value={formData.code} onChange={e => handleInputChange('code', e.target.value)} />
+                    </div>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Loại hình</label>
+                        <select style={styles.formInput} value={formData.type} onChange={e => handleInputChange('type', e.target.value)}>
+                            <option value="" disabled>-- Chọn loại hình --</option>
+                            {SUBDIVISION_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                        </select>
+                    </div>
+                </div>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Trạng thái</label>
+                    <select style={styles.formInput} value={formData.status} onChange={e => handleInputChange('status', e.target.value)}>
+                        {TRANSACTION_STATUSES.map(status => <option key={status} value={status}>{status}</option>)}
+                    </select>
+                </div>
+            </div>
+        </>
+    );
+
+    // Form for "Khối BĐS" (Property Block)
+    const renderBlockForm = () => (
+         <>
+            {/* THÔNG TIN CƠ BẢN */}
+            <div style={styles.formSection}>
+                <h3 style={styles.formSectionHeader}>THÔNG TIN CƠ BẢN</h3>
+                <div style={styles.formGrid}>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Tên khối</label>
+                        <input type="text" style={styles.formInput} value={formData.name} onChange={e => handleInputChange('name', e.target.value)} />
+                    </div>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Thuộc phân khu</label>
+                        <select style={styles.formInput} value={formData.parentSubdivisionId} onChange={e => handleInputChange('parentSubdivisionId', e.target.value)}>
+                            <option value="">Không thuộc phân khu nào</option>
+                             {subdivisions.map(s => <option key={s.id} value={s.id}>{s.name} ({projects.find(p => p.id === s.projectId)?.name})</option>)}
+                        </select>
+                    </div>
+                </div>
+                 <div style={styles.formGrid}>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Mã khối</label>
+                        <input type="text" style={styles.formInput} value={formData.code} onChange={e => handleInputChange('code', e.target.value)} />
+                    </div>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Loại hình</label>
+                        <select style={styles.formInput} value={formData.type} onChange={e => handleInputChange('type', e.target.value)}>
+                             {BUILDING_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                        </select>
+                    </div>
+                </div>
+                <div style={styles.formGroup}>
+                    <label style={styles.formLabel}>Trạng thái giao dịch</label>
+                    <select style={styles.formInput} value={formData.status} onChange={e => handleInputChange('status', e.target.value)}>
+                        {TRANSACTION_STATUSES.map(status => <option key={status} value={status}>{status}</option>)}
+                    </select>
+                </div>
+            </div>
+            {/* THÔNG SỐ KỸ THUẬT */}
+            <div style={styles.formSection}>
+                 <h3 style={styles.formSectionHeader}>THÔNG SỐ KỸ THUẬT</h3>
+                 <div style={styles.formGrid}>
+                    {isHighRise && (
+                        <>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Số tầng nổi</label><input type="number" style={styles.formInput} value={formData.floorsAbove} onChange={e => handleInputChange('floorsAbove', e.target.value)} /></div>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Số tầng hầm</label><input type="number" style={styles.formInput} value={formData.floorsBelow} onChange={e => handleInputChange('floorsBelow', e.target.value)} /></div>
+                        </>
+                    )}
+                     {(propertyType === 'Chung cư' || propertyType === 'Condotel') && (
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Số tầng căn hộ</label><input type="number" style={styles.formInput} value={formData.apartmentFloors} onChange={e => handleInputChange('apartmentFloors', e.target.value)} /></div>
+                    )}
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Số lượng căn</label><input type="number" style={styles.formInput} value={formData.unitCount} onChange={e => handleInputChange('unitCount', e.target.value)} /></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Số lượng thang máy</label><input type="number" style={styles.formInput} value={formData.elevatorCount} onChange={e => handleInputChange('elevatorCount', e.target.value)} /></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích khu đất (m²)</label><input type="number" style={styles.formInput} value={formData.landArea} onChange={e => handleInputChange('landArea', e.target.value)} /></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích xây dựng (m²)</label><input type="number" style={styles.formInput} value={formData.constructionArea} onChange={e => handleInputChange('constructionArea', e.target.value)} /></div>
+                    <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích cây xanh, mặt nước</label><input type="number" style={styles.formInput} value={formData.greeneryArea} onChange={e => handleInputChange('greeneryArea', e.target.value)} /></div>
+                     {isLowRise && (
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Số tầng xây dựng (điển hình)</label><input type="number" style={styles.formInput} value={formData.buildingFloors} onChange={e => handleInputChange('buildingFloors', e.target.value)} /></div>
+                    )}
+                     {(propertyType === 'Liền kề' || propertyType === 'Shophouse') && (
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Bề rộng mặt tiền (điển hình) (m)</label><input type="number" style={styles.formInput} value={formData.frontageWidth} onChange={e => handleInputChange('frontageWidth', e.target.value)} /></div>
+                    )}
+                     {propertyType === 'Shophouse' && (
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Chiều cao trần Tầng 1</label><input type="text" style={styles.formInput} value={formData.firstFloorCeilingHeight} onChange={e => handleInputChange('firstFloorCeilingHeight', e.target.value)} /></div>
+                    )}
+                     {(propertyType === 'Shophouse' || propertyType === 'Officetel') && (
+                         <div style={styles.formGroup}><label style={styles.formLabel}>Thiết kế Lối đi</label><input type="text" style={styles.formInput} value={formData.walkwayDesign} onChange={e => handleInputChange('walkwayDesign', e.target.value)} /></div>
+                    )}
+                 </div>
+            </div>
+        </>
+    );
+
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: 0, fontSize: '20px' }}>Quản lý Phân khu</h3>
-                <button style={styles.button} onClick={handleAdd}>Thêm mới</button>
+                <h2 style={{ ...styles.header, marginBottom: 0 }}>
+                    {mode === 'add' ? `Tạo mới ${category === 'subdivision' ? 'Phân khu' : 'Khối BĐS'}` : `Chỉnh sửa: ${item?.name}`}
+                </h2>
+                <div>
+                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={onCancel}>Hủy</button>
+                    <button style={styles.button} onClick={handleSubmit}>Lưu</button>
+                </div>
             </div>
+            <div style={styles.formPageContainer}>
+                {category === 'subdivision' ? renderSubdivisionForm() : renderBlockForm()}
+            </div>
+        </div>
+    );
+};
+
+const SubdivisionManagementView = ({
+    subdivisions,
+    onAdd,
+    onDelete,
+    onEdit,
+    onToggleVisibility,
+    onBulkDelete,
+    onBulkToggleVisibility,
+}: {
+    subdivisions: any[];
+    onAdd: () => void;
+    onDelete: (item: any) => void;
+    onEdit: (item: any) => void;
+    onToggleVisibility: (id: number) => void;
+    onBulkDelete: (ids: Set<number>) => void;
+    onBulkToggleVisibility: (ids: Set<number>, visibility: boolean) => void;
+}) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [projectFilter, setProjectFilter] = useState('all');
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [selectedIds, setSelectedIds] = useState(new Set<number>());
+
+    const filteredSubdivisions = useMemo(() => {
+        return subdivisions.filter(s => {
+            const nameMatch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const projectMatch = projectFilter === 'all' || s.projectId === parseInt(projectFilter, 10);
+            const typeMatch = typeFilter === 'all' || s.type === typeFilter;
+            const statusMatch = statusFilter === 'all' || s.status === statusFilter;
+            return nameMatch && projectMatch && typeMatch && statusMatch;
+        });
+    }, [subdivisions, searchTerm, projectFilter, typeFilter, statusFilter]);
+
+    const handleSelectRow = (id: number) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+    };
+    
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(new Set(filteredSubdivisions.map(s => s.id)));
+        } else {
+            setSelectedIds(new Set());
+        }
+    };
+
+    const handleBulkDeleteClick = () => {
+        onBulkDelete(selectedIds);
+        setSelectedIds(new Set());
+    };
+    
+    const handleBulkVisibilityClick = (visibility: boolean) => {
+        onBulkToggleVisibility(selectedIds, visibility);
+        setSelectedIds(new Set());
+    };
+
+    const isAllSelected = selectedIds.size > 0 && selectedIds.size === filteredSubdivisions.length;
+
+    const uniqueTypes = [...new Set(mockSubdivisions.filter(s => s.category === 'subdivision').map(s => s.type))];
+    const uniqueStatuses = [...new Set(mockSubdivisions.map(s => s.status))];
+
+    const columns = [
+        { key: 'name', label: 'Tên Phân khu', render: (row: any) => <span style={{cursor: 'pointer', fontWeight: 500}} onClick={() => onEdit(row)}>{row.name}</span> },
+        { key: 'project', label: 'Thuộc Dự án', render: (row: any) => mockProjects.find(p => p.id === row.projectId)?.name || 'N/A' },
+        { key: 'status', label: 'Trạng thái giao dịch' },
+        { key: 'createdAt', label: 'Ngày tạo', render: (row: any) => formatDate(row.createdAt).split(',')[1] }, // Show only date part
+        { key: 'visible', label: 'Hiển thị', render: (row: any) => <ToggleSwitch checked={row.visible} onChange={() => onToggleVisibility(row.id)} /> },
+    ];
+
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{...styles.header, marginBottom: 0}}>Quản lý Phân khu</h2>
+                <div>
+                     <button style={{...styles.actionButton, padding: '10px 15px', marginRight: '10px'}}><DownloadIcon/> Import (CSV)</button>
+                     <button style={styles.button} onClick={onAdd}>Tạo phân khu mới</button>
+                </div>
+            </div>
+
+            <div style={{...styles.tableContainer, padding: '15px', marginBottom: '20px', backgroundColor: '#f8f9fa', border: '1px solid var(--border-color)', boxShadow: 'none'}}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '15px' }}>
+                    <input 
+                        type="text" 
+                        placeholder="Tìm theo tên phân khu..." 
+                        style={styles.formInput}
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                    />
+                     <select style={styles.formInput} value={projectFilter} onChange={e => setProjectFilter(e.target.value)}>
+                        <option value="all">Tất cả dự án</option>
+                        {mockProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    <select style={styles.formInput} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+                        <option value="all">Tất cả loại hình</option>
+                        {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                     <select style={styles.formInput} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                        <option value="all">Tất cả trạng thái</option>
+                        {uniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            {selectedIds.size > 0 && (
+                <div style={styles.bulkActionToolbar}>
+                    <span style={{ fontWeight: 600 }}>{selectedIds.size} đã chọn</span>
+                    <button style={styles.actionButton} onClick={handleBulkDeleteClick}><TrashIcon/> Xóa</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                       <span style={{fontWeight: 500}}>Cài đặt hiển thị:</span>
+                       <button style={{...styles.actionButton, padding: '8px 12px'}} onClick={() => handleBulkVisibilityClick(true)}>Hiện</button>
+                       <button style={{...styles.actionButton, padding: '8px 12px'}} onClick={() => handleBulkVisibilityClick(false)}>Ẩn</button>
+                    </div>
+                </div>
+            )}
+            
+             <TabularDataManagement
+                title=""
+                columns={columns}
+                data={filteredSubdivisions}
+                onDelete={onDelete}
+                onEdit={onEdit}
+                selectedIds={selectedIds}
+                onSelectRow={handleSelectRow}
+                onSelectAll={handleSelectAll}
+                isAllSelected={isAllSelected}
+            />
+        </div>
+    );
+};
+
+
+const SubdivisionDetailView = ({ item, setView, subdivisions, onSave, onDelete, onEdit }: { item: any, setView: (view: string, state?: any) => void, subdivisions: any[], onSave: (data: any) => void, onDelete: (item: any) => void, onEdit: (item: any) => void }) => {
+    const [activeTab, setActiveTab] = useState('info');
+
+    const tabs = [
+        { id: 'info', label: 'Thông tin chung' },
+        { id: 'buildings', label: 'Danh sách Khối BĐS' },
+        { id: 'inventory', label: 'Quản lý giỏ hàng' },
+    ];
+
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'info':
+                return <AddEditSubdivisionBlockView
+                           mode="edit"
+                           item={item}
+                           onSave={onSave}
+                           onCancel={() => setView('products.subdivisions')}
+                           category="subdivision"
+                           projects={mockProjects}
+                       />;
+            case 'buildings':
+                const buildingData = subdivisions.filter(s => s.projectId === item.projectId && s.category === 'block');
+                const buildingColumns = [
+                    { key: 'name', label: 'Tên Khối BĐS' },
+                    { key: 'code', label: 'Mã' },
+                    { key: 'status', label: 'Trạng thái' },
+                    { key: 'createdAt', label: 'Ngày tạo', render: (row: any) => formatDate(row.createdAt).split(',')[1] },
+                ];
+                return (
+                    <div style={{...styles.tabContent, padding: '0', boxShadow: 'none', backgroundColor: 'transparent' }}>
+                        <TabularDataManagement
+                            title="Danh sách Khối BĐS"
+                            description={`Các khối BĐS thuộc dự án ${mockProjects.find(p=>p.id === item.projectId)?.name}.`}
+                            columns={buildingColumns}
+                            data={buildingData}
+                            onAdd={() => setView('products.buildings.add', { prefill: { projectId: item.projectId } })}
+                            onEdit={(building) => onEdit(building)}
+                            onDelete={(building) => onDelete(building)}
+                        />
+                    </div>
+                );
+            case 'inventory':
+                 return (
+                    <div style={styles.tabContent}>
+                        <h3 style={{ margin: '0 0 10px 0', fontSize: '20px' }}>Quản lý giỏ hàng</h3>
+                        <p style={{margin: '0 0 20px 0', color: 'var(--text-secondary)'}}>Tạo và quản lý các căn hộ/sản phẩm trong phân khu này.</p>
+                        <button style={styles.button} onClick={() => setView('products.subdivisions.inventory.bulk-add', { subdivision: item })}>
+                            Tạo giỏ hàng hàng loạt
+                        </button>
+                    </div>
+                 );
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div>
+            <div style={{ marginBottom: '20px' }}>
+                <button onClick={() => setView('products.subdivisions')} style={{...styles.actionButton, border: 'none', padding: '5px 0', marginBottom: '10px'}}>
+                    &larr; Quay lại danh sách phân khu
+                </button>
+                <h2 style={{ ...styles.header, marginBottom: 0 }}>Phân khu: {item.name}</h2>
+            </div>
+            
+            <div style={styles.tabContainer}>
+                {tabs.map(tab => (
+                    <button 
+                        key={tab.id} 
+                        style={{...styles.tabButton, ...(activeTab === tab.id ? styles.activeTabButton : {})}}
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            <div>{renderTabContent()}</div>
+        </div>
+    );
+};
+
+const BuildingManagementView = ({
+    buildings,
+    subdivisions,
+    onAdd,
+    onDelete,
+    onEdit,
+    onToggleVisibility,
+    onBulkDelete,
+    onBulkToggleVisibility,
+}: {
+    buildings: any[];
+    subdivisions: any[];
+    onAdd: () => void;
+    onDelete: (item: any) => void;
+    onEdit: (item: any) => void;
+    onToggleVisibility: (id: number) => void;
+    onBulkDelete: (ids: Set<number>) => void;
+    onBulkToggleVisibility: (ids: Set<number>, visibility: boolean) => void;
+}) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [subdivisionFilter, setSubdivisionFilter] = useState('all');
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [selectedIds, setSelectedIds] = useState(new Set<number>());
+
+    const filteredBuildings = useMemo(() => {
+        return buildings.filter(b => {
+            const nameMatch = b.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const subdivisionMatch = subdivisionFilter === 'all' ||
+                (subdivisionFilter === 'none' && !b.parentSubdivisionId) ||
+                b.parentSubdivisionId == subdivisionFilter;
+            const typeMatch = typeFilter === 'all' || b.type === typeFilter;
+            return nameMatch && subdivisionMatch && typeMatch;
+        });
+    }, [buildings, searchTerm, subdivisionFilter, typeFilter]);
+
+    const handleSelectRow = (id: number) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+    };
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(new Set(filteredBuildings.map(b => b.id)));
+        } else {
+            setSelectedIds(new Set());
+        }
+    };
+
+    const handleBulkDeleteClick = () => {
+        onBulkDelete(selectedIds);
+        setSelectedIds(new Set());
+    };
+
+    const handleBulkVisibilityClick = (visibility: boolean) => {
+        onBulkToggleVisibility(selectedIds, visibility);
+        setSelectedIds(new Set());
+    };
+
+    const isAllSelected = selectedIds.size > 0 && selectedIds.size === filteredBuildings.length;
+
+    const uniqueTypes = [...new Set(buildings.map(b => b.type))];
+
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{...styles.header, marginBottom: 0}}>Quản lý Khối BĐS</h2>
+                <div>
+                     <button style={{...styles.actionButton, padding: '10px 15px', marginRight: '10px'}}><DownloadIcon/> Import (CSV)</button>
+                     <button style={styles.button} onClick={onAdd}>Tạo khối mới</button>
+                </div>
+            </div>
+
+            <div style={{...styles.tableContainer, padding: '15px', marginBottom: '20px', backgroundColor: '#f8f9fa', border: '1px solid var(--border-color)', boxShadow: 'none'}}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '15px' }}>
+                    <input 
+                        type="text" 
+                        placeholder="Tìm theo tên khối..." 
+                        style={styles.formInput}
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                    />
+                    <select style={styles.formInput} value={subdivisionFilter} onChange={e => setSubdivisionFilter(e.target.value)}>
+                        <option value="all">Tất cả phân khu</option>
+                        {subdivisions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        <option value="none">Không thuộc phân khu nào</option>
+                    </select>
+                    <select style={styles.formInput} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+                        <option value="all">Tất cả loại hình</option>
+                        {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            {selectedIds.size > 0 && (
+                <div style={styles.bulkActionToolbar}>
+                    <span style={{ fontWeight: 600 }}>{selectedIds.size} đã chọn</span>
+                    <button style={styles.actionButton} onClick={handleBulkDeleteClick}><TrashIcon/> Xóa</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                       <span style={{fontWeight: 500}}>Cài đặt hiển thị:</span>
+                       <button style={{...styles.actionButton, padding: '8px 12px'}} onClick={() => handleBulkVisibilityClick(true)}>Hiện</button>
+                       <button style={{...styles.actionButton, padding: '8px 12px'}} onClick={() => handleBulkVisibilityClick(false)}>Ẩn</button>
+                    </div>
+                </div>
+            )}
+            
             <div style={styles.tableContainer}>
                 <table style={styles.table}>
                     <thead>
                         <tr>
-                            <th style={styles.th}>Tên Phân khu</th>
+                            <th style={{...styles.th, width: '50px' }}><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /></th>
+                            <th style={styles.th}>Tên Khối</th>
+                            <th style={styles.th}>Thuộc Phân khu</th>
+                            <th style={styles.th}>Loại hình</th>
+                            <th style={styles.th}>Trạng thái</th>
+                            <th style={styles.th}>Số lượng Units</th>
+                            <th style={styles.th}>Hiển thị</th>
                             <th style={styles.th}>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {subdivisions.map(item => (
-                            <tr key={item.id}>
-                                <td style={styles.td}>{item.name}</td>
+                        {filteredBuildings.map(block => {
+                             const parentSub = subdivisions.find(s => s.id === block.parentSubdivisionId);
+                             return (
+                                <tr key={block.id} style={{backgroundColor: selectedIds.has(block.id) ? 'var(--active-item-bg)' : 'transparent'}}>
+                                    <td style={styles.td}><input type="checkbox" checked={selectedIds.has(block.id)} onChange={() => handleSelectRow(block.id)} /></td>
+                                    <td style={{...styles.td, cursor: 'pointer', fontWeight: 500}} onClick={() => onEdit(block)}>{block.name}</td>
+                                    <td style={styles.td}>{parentSub ? parentSub.name : 'Không thuộc phân khu nào'}</td>
+                                    <td style={styles.td}>{block.type}</td>
+                                    <td style={styles.td}>{block.status}</td>
+                                    <td style={styles.td}>{block.unitCount}</td>
+                                    <td style={styles.td}><ToggleSwitch checked={block.visible} onChange={() => onToggleVisibility(block.id)} /></td>
+                                    <td style={styles.td}>
+                                        <button style={styles.actionButton} onClick={() => onEdit(block)}>Sửa</button>
+                                        <button style={styles.actionButton} onClick={() => onDelete(block)}>Xoá</button>
+                                    </td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+
+const AddEditUnitTypeView = ({
+    mode,
+    item,
+    onSave,
+    onCancel,
+}: { mode: 'add' | 'edit', item: any | null, onSave: (data: any) => void, onCancel: () => void }) => {
+    const [formData, setFormData] = useState(item || {
+        name: '',
+        code: '',
+        type: 'Căn hộ',
+        clearanceArea: '',
+        builtUpArea: '',
+        bedrooms: '',
+        bathrooms: '',
+        doorDirection: '',
+        balconyDirection: '',
+        kitchenDirection: '',
+        houseDirection: '',
+        landArea: '',
+        buildingArea: '',
+        floors: '',
+        frontageWidth: '',
+        description: '',
+        price: '',
+        floorPlanImage: null,
+        gallery: null,
+        document: null,
+    });
+
+    const handleInputChange = (field: string, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+    
+    const handleFileChange = (field: string, files: FileList | null) => {
+         handleInputChange(field, files);
+    };
+
+    const handleSubmit = () => {
+        if (!formData.name || !formData.type) {
+            alert('Vui lòng nhập Tên Mẫu nhà và chọn Loại hình.');
+            return;
+        }
+        onSave(formData);
+    };
+
+    const PROPERTY_TYPES = ["Căn hộ", "Biệt thự", "Nhà phố", "Shophouse", "Officetel"];
+    const DIRECTIONS = ["Đông", "Tây", "Nam", "Bắc", "Đông-Bắc", "Tây-Bắc", "Đông-Nam", "Tây-Nam"];
+
+    const isHouseLike = ['Biệt thự', 'Nhà phố', 'Shophouse'].includes(formData.type);
+
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ ...styles.header, marginBottom: 0 }}>
+                    {mode === 'add' ? 'Tạo mẫu nhà mới' : `Chỉnh sửa: ${item?.name}`}
+                </h2>
+                <div>
+                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={onCancel}>Hủy</button>
+                    <button style={styles.button} onClick={handleSubmit}>Lưu</button>
+                </div>
+            </div>
+            <div style={styles.formPageContainer}>
+                {/* THÔNG TIN CƠ BẢN */}
+                <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>THÔNG TIN CƠ BẢN</h3>
+                    <div style={styles.formGrid}>
+                        <div style={{...styles.formGroup, gridColumn: 'span 2'}}>
+                            <label style={styles.formLabel}>Tên mẫu nhà</label>
+                            <input type="text" style={styles.formInput} value={formData.name} onChange={e => handleInputChange('name', e.target.value)} />
+                        </div>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Mã mẫu nhà</label>
+                            <input type="text" style={styles.formInput} value={formData.code} onChange={e => handleInputChange('code', e.target.value)} />
+                        </div>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Loại hình</label>
+                            <select style={styles.formInput} value={formData.type} onChange={e => handleInputChange('type', e.target.value)}>
+                                {PROPERTY_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* THÔNG SỐ KỸ THUẬT */}
+                <div style={styles.formSection}>
+                     <h3 style={styles.formSectionHeader}>THÔNG SỐ KỸ THUẬT</h3>
+                     <div style={styles.formGrid}>
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích thông thủy (m²)</label><input type="number" style={styles.formInput} value={formData.clearanceArea} onChange={e => handleInputChange('clearanceArea', e.target.value)} /></div>
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích tim tường (m²)</label><input type="number" style={styles.formInput} value={formData.builtUpArea} onChange={e => handleInputChange('builtUpArea', e.target.value)} /></div>
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Số phòng ngủ</label><input type="number" style={styles.formInput} value={formData.bedrooms} onChange={e => handleInputChange('bedrooms', e.target.value)} /></div>
+                        <div style={styles.formGroup}><label style={styles.formLabel}>Số phòng tắm</label><input type="number" style={styles.formInput} value={formData.bathrooms} onChange={e => handleInputChange('bathrooms', e.target.value)} /></div>
+                     </div>
+                     <div style={{...styles.formGrid, gridTemplateColumns: '1fr 1fr 1fr 1fr'}}>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Hướng cửa</label>
+                            <select style={styles.formInput} value={formData.doorDirection} onChange={e => handleInputChange('doorDirection', e.target.value)}><option value="">-- Chọn --</option>{DIRECTIONS.map(d => <option key={d} value={d}>{d}</option>)}</select>
+                        </div>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Hướng ban công</label>
+                            <select style={styles.formInput} value={formData.balconyDirection} onChange={e => handleInputChange('balconyDirection', e.target.value)}><option value="">-- Chọn --</option>{DIRECTIONS.map(d => <option key={d} value={d}>{d}</option>)}</select>
+                        </div>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Hướng bếp</label>
+                            <select style={styles.formInput} value={formData.kitchenDirection} onChange={e => handleInputChange('kitchenDirection', e.target.value)}><option value="">-- Chọn --</option>{DIRECTIONS.map(d => <option key={d} value={d}>{d}</option>)}</select>
+                        </div>
+                         <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Hướng nhà</label>
+                            <select style={styles.formInput} value={formData.houseDirection} onChange={e => handleInputChange('houseDirection', e.target.value)}><option value="">-- Chọn --</option>{DIRECTIONS.map(d => <option key={d} value={d}>{d}</option>)}</select>
+                        </div>
+                     </div>
+                     {isHouseLike && (
+                         <div style={styles.formGrid}>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích đất (m²)</label><input type="number" style={styles.formInput} value={formData.landArea} onChange={e => handleInputChange('landArea', e.target.value)} /></div>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Diện tích xây dựng (m²)</label><input type="number" style={styles.formInput} value={formData.buildingArea} onChange={e => handleInputChange('buildingArea', e.target.value)} /></div>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Số tầng</label><input type="number" style={styles.formInput} value={formData.floors} onChange={e => handleInputChange('floors', e.target.value)} /></div>
+                            <div style={styles.formGroup}><label style={styles.formLabel}>Chiều rộng mặt tiền (m)</label><input type="number" style={styles.formInput} value={formData.frontageWidth} onChange={e => handleInputChange('frontageWidth', e.target.value)} /></div>
+                        </div>
+                     )}
+                </div>
+
+                {/* THÔNG TIN CHI TIẾT */}
+                <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>THÔNG TIN CHI TIẾT</h3>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Mô tả</label>
+                        <div style={styles.richTextContainer}>
+                            <div style={styles.richTextToolbar}>Rich text editor toolbar</div>
+                            <textarea style={styles.richTextEditor} value={formData.description} onChange={e => handleInputChange('description', e.target.value)}></textarea>
+                        </div>
+                    </div>
+                     <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>File tài liệu đính kèm (pdf)</label>
+                        <input type="file" style={styles.formInput} accept=".pdf" onChange={e => handleFileChange('document', e.target.files)} />
+                    </div>
+                </div>
+                
+                {/* GIÁ */}
+                <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>GIÁ</h3>
+                    <div style={{...styles.formGroup, maxWidth: '50%'}}>
+                        <label style={styles.formLabel}>Giá cơ bản mặc định (VND)</label>
+                        <input type="number" style={styles.formInput} placeholder="VD: 2500000000" value={formData.price} onChange={e => handleInputChange('price', e.target.value)} />
+                    </div>
+                </div>
+
+                {/* MEDIA */}
+                <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>MEDIA</h3>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Ảnh mặt bằng</label>
+                        <input type="file" style={styles.formInput} accept="image/*" onChange={e => handleFileChange('floorPlanImage', e.target.files)} />
+                    </div>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Thư viện ảnh</label>
+                        <input type="file" multiple style={styles.formInput} accept="image/*" onChange={e => handleFileChange('gallery', e.target.files)} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const BulkInventoryCreationView = ({ subdivision, unitTypes, onSave, onCancel }: { subdivision: any, unitTypes: any[], onSave: () => void, onCancel: () => void }) => {
+    const [selectedUnitType, setSelectedUnitType] = useState(unitTypes.length > 0 ? unitTypes[0].id.toString() : '');
+    const [fromFloor, setFromFloor] = useState('');
+    const [toFloor, setToFloor] = useState('');
+    const [excludeFloors, setExcludeFloors] = useState('');
+    const [unitCodes, setUnitCodes] = useState('');
+    const [status, setStatus] = useState('Đang mở bán');
+    const [price, setPrice] = useState('');
+
+    const handleSubmit = () => {
+        if (!selectedUnitType || !fromFloor || !toFloor || !unitCodes) {
+            alert('Vui lòng điền đầy đủ các trường trong mục "Tạo căn theo tầng".');
+            return;
+        }
+        // Simple log for now, in a real app this would call an API
+        console.log("Generating inventory with payload:", {
+            subdivisionId: subdivision.id,
+            unitTypeId: selectedUnitType,
+            fromFloor,
+            toFloor,
+            excludeFloors,
+            unitCodes,
+            status,
+            price
+        });
+        alert('Chức năng tạo giỏ hàng hàng loạt thành công! (Kiểm tra console log để xem dữ liệu)');
+        onSave();
+    };
+
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ ...styles.header, marginBottom: 0 }}>
+                    Tạo giỏ hàng hàng loạt: {subdivision.name}
+                </h2>
+                <div>
+                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={onCancel}>Hủy</button>
+                    <button style={styles.button} onClick={handleSubmit}>Lưu & Tạo</button>
+                </div>
+            </div>
+            <div style={styles.formPageContainer}>
+                <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>Chọn mẫu căn</h3>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Mẫu căn hộ/nhà</label>
+                        <select style={styles.formInput} value={selectedUnitType} onChange={e => setSelectedUnitType(e.target.value)}>
+                            {unitTypes.map(ut => <option key={ut.id} value={ut.id}>{ut.name}</option>)}
+                        </select>
+                    </div>
+                </div>
+
+                <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>TẠO CĂN THEO TẦNG</h3>
+                     <div style={styles.formGrid}>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Từ tầng</label>
+                            <input type="number" style={styles.formInput} value={fromFloor} onChange={e => setFromFloor(e.target.value)} />
+                        </div>
+                         <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Đến tầng</label>
+                            <input type="number" style={styles.formInput} value={toFloor} onChange={e => setToFloor(e.target.value)} />
+                        </div>
+                    </div>
+                     <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Loại trừ các tầng</label>
+                        <input type="text" style={styles.formInput} placeholder="Tách bằng dấu phẩy, ví dụ 12A, 14" value={excludeFloors} onChange={e => setExcludeFloors(e.target.value)} />
+                    </div>
+                     <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Mã căn</label>
+                        <input type="text" style={styles.formInput} placeholder="Tách bằng dấu phẩy, ví dụ 01, 05, 08" value={unitCodes} onChange={e => setUnitCodes(e.target.value)} />
+                    </div>
+                </div>
+
+                <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>THÔNG TIN MẶC ĐỊNH</h3>
+                     <div style={styles.formGrid}>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Trạng thái giao dịch</label>
+                            <select style={styles.formInput} value={status} onChange={e => setStatus(e.target.value)}>
+                                <option>Đang mở bán</option>
+                                <option>Sắp mở bán</option>
+                                <option>Đã bán hết</option>
+                            </select>
+                        </div>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Giá cơ bản (VND)</label>
+                            <input type="number" style={styles.formInput} placeholder="VD: 3000000000" value={price} onChange={e => setPrice(e.target.value)} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+const UnitTypesView = ({
+    unitTypes,
+    setView,
+    onDelete
+} : {
+    unitTypes: any[],
+    setView: (view: string, state?: any) => void;
+    onDelete: (id: number) => void;
+}) => {
+    const [selectedIds, setSelectedIds] = useState(new Set<number>());
+    const [searchTerm, setSearchTerm] = useState('');
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [bedroomFilter, setBedroomFilter] = useState('all');
+    const [bathroomFilter, setBathroomFilter] = useState('all');
+
+    const filteredData = useMemo(() => {
+        return unitTypes.filter(u => {
+            const nameMatch = u.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const typeMatch = typeFilter === 'all' || u.type === typeFilter;
+            const bedroomMatch = bedroomFilter === 'all' || u.bedrooms === parseInt(bedroomFilter);
+            const bathroomMatch = bathroomFilter === 'all' || u.bathrooms === parseInt(bathroomFilter);
+            return nameMatch && typeMatch && bedroomMatch && bathroomMatch;
+        });
+    }, [unitTypes, searchTerm, typeFilter, bedroomFilter, bathroomFilter]);
+
+    const handleSelectRow = (id: number) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+    };
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(new Set(filteredData.map(u => u.id)));
+        } else {
+            setSelectedIds(new Set());
+        }
+    };
+
+    const handleBulkDelete = () => {
+        if (window.confirm(`Bạn có chắc muốn xóa ${selectedIds.size} mẫu nhà đã chọn?`)) {
+            selectedIds.forEach(id => onDelete(id));
+            setSelectedIds(new Set());
+        }
+    };
+
+    const handleDelete = (id: number) => {
+        if (window.confirm(`Bạn có chắc muốn xóa mẫu nhà này?`)) {
+            onDelete(id);
+        }
+    };
+
+    const isAllSelected = selectedIds.size > 0 && selectedIds.size === filteredData.length;
+
+    const uniqueTypes = [...new Set(mockUnitTypes.map(u => u.type))];
+    const uniqueBedrooms = [...new Set(mockUnitTypes.map(u => u.bedrooms))].sort((a, b) => a - b);
+    const uniqueBathrooms = [...new Set(mockUnitTypes.map(u => u.bathrooms))].sort((a, b) => a - b);
+
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ ...styles.header, marginBottom: 0 }}>Quản lý Mẫu nhà</h2>
+                <div>
+                    <button style={{ ...styles.actionButton, padding: '10px 15px', marginRight: '10px' }}><DownloadIcon /> Import (CSV)</button>
+                    <button style={styles.button} onClick={() => setView('products.unittypes.add')}>Tạo mẫu nhà mới</button>
+                </div>
+            </div>
+
+            <div style={{ ...styles.tableContainer, padding: '15px', marginBottom: '20px', backgroundColor: '#f8f9fa', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '15px' }}>
+                    <input
+                        type="text"
+                        placeholder="Tìm theo tên mẫu nhà..."
+                        style={styles.formInput}
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                    />
+                    <select style={styles.formInput} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+                        <option value="all">Tất cả loại hình</option>
+                        {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <select style={styles.formInput} value={bedroomFilter} onChange={e => setBedroomFilter(e.target.value)}>
+                        <option value="all">Số phòng ngủ</option>
+                        {uniqueBedrooms.map(b => <option key={b} value={b}>{b === 0 ? 'Studio' : `${b} PN`}</option>)}
+                    </select>
+                    <select style={styles.formInput} value={bathroomFilter} onChange={e => setBathroomFilter(e.target.value)}>
+                        <option value="all">Số phòng tắm</option>
+                        {uniqueBathrooms.map(b => <option key={b} value={b}>{`${b} PT`}</option>)}
+                    </select>
+                </div>
+            </div>
+
+            {selectedIds.size > 0 && (
+                <div style={styles.bulkActionToolbar}>
+                    <span style={{ fontWeight: 600 }}>{selectedIds.size} đã chọn</span>
+                    <button style={styles.actionButton} onClick={handleBulkDelete}><TrashIcon /> Xóa</button>
+                </div>
+            )}
+
+            <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={{ ...styles.th, width: '50px' }}>
+                                <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
+                            </th>
+                            <th style={styles.th}>Tên Mẫu nhà</th>
+                            <th style={styles.th}>Loại hình BĐS</th>
+                            <th style={styles.th}>Diện tích</th>
+                            <th style={styles.th}>Phòng ngủ</th>
+                            <th style={styles.th}>Phòng tắm</th>
+                            <th style={styles.th}>Ngày tạo</th>
+                            <th style={styles.th}>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredData.map(unit => (
+                            <tr key={unit.id} style={{ backgroundColor: selectedIds.has(unit.id) ? 'var(--active-item-bg)' : 'transparent' }}>
+                                <td style={styles.td}>
+                                    <input type="checkbox" checked={selectedIds.has(unit.id)} onChange={() => handleSelectRow(unit.id)} />
+                                </td>
+                                <td style={styles.td}>{unit.name}</td>
+                                <td style={styles.td}>{unit.type}</td>
+                                <td style={styles.td}>{unit.area}m²</td>
+                                <td style={styles.td}>{unit.bedrooms}</td>
+                                <td style={styles.td}>{unit.bathrooms}</td>
+                                <td style={styles.td}>{formatDate(unit.createdAt).split(',')[1]}</td>
+                                <td style={styles.td}>
+                                    <button style={styles.actionButton} onClick={() => setView('products.unittypes.edit', { item: unit })}>Sửa</button>
+                                    <button style={styles.actionButton} onClick={() => handleDelete(unit.id)}>Xoá</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+const PropertiesView = () => {
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [properties, setProperties] = useState(mockRetailProperties);
+    
+    const columns = [
+        { key: 'name', label: 'Tên BĐS' },
+        { key: 'address', label: 'Địa chỉ' },
+        { key: 'price', label: 'Giá' },
+        { key: 'type', label: 'Loại hình' },
+        { key: 'status', label: 'Trạng thái' },
+    ];
+    
+    return (
+        <TabularDataManagement
+            title="Quản lý Bất động sản"
+            columns={columns}
+            data={properties}
+            onAdd={() => alert('Add property')}
+            onEdit={(row) => alert(`Edit ${row.name}`)}
+            onDelete={(row) => alert(`Delete ${row.name}`)}
+        />
+    );
+};
+
+
+const TransactionManagementView = () => {
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [transactions, setTransactions] = useState(mockTransactions);
+    
+    return (
+        <div>
+            <h2 style={styles.header}>Quản lý Giao dịch</h2>
+             <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={styles.th}>Mã Giao dịch</th>
+                            <th style={styles.th}>Mã Sản phẩm</th>
+                            <th style={styles.th}>Dự án</th>
+                            <th style={styles.th}>Khách hàng</th>
+                            <th style={styles.th}>Số tiền</th>
+                            <th style={styles.th}>Ngày</th>
+                            <th style={styles.th}>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {transactions.map(tx => (
+                            <tr key={tx.id}>
+                                <td style={styles.td}>{tx.id}</td>
+                                <td style={styles.td}>{tx.unitCode}</td>
+                                <td style={styles.td}>{tx.projectName}</td>
+                                <td style={styles.td}>{tx.customerName}</td>
+                                <td style={styles.td}>{tx.amount}</td>
+                                <td style={styles.td}>{tx.date}</td>
+                                <td style={styles.td}>{tx.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
+const LivestreamManagementView = () => {
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [livestreams, setLivestreams] = useState(mockLivestreams);
+    const now = new Date();
+
+    const isLive = (startTime: string) => {
+        try {
+            const startDate = new Date(startTime);
+            const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Assume 2 hour duration
+            return now >= startDate && now <= endDate;
+        } catch {
+            return false;
+        }
+    };
+
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{...styles.header, marginBottom: 0}}>Quản lý Livestream</h2>
+                <button style={styles.button}>Tạo Livestream</button>
+            </div>
+             <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={styles.th}>Tiêu đề</th>
+                            <th style={styles.th}>Thời gian bắt đầu</th>
+                            <th style={styles.th}>Link YouTube</th>
+                            <th style={styles.th}>Sản phẩm liên quan</th>
+                            <th style={styles.th}>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {livestreams.map(ls => (
+                            <tr key={ls.id}>
+                                <td style={styles.td}>
+                                    {ls.title}
+                                    {isLive(ls.startTime) && <span style={styles.liveBadge}>LIVE</span>}
+                                </td>
+                                <td style={styles.td}>{formatDate(ls.startTime)}</td>
+                                <td style={styles.td}><a href={ls.youtubeLink} target="_blank" rel="noopener noreferrer">{ls.youtubeLink}</a></td>
+                                <td style={styles.td}>{ls.relatedProducts.length}</td>
                                 <td style={styles.td}>
                                     <button style={styles.actionButton}>Sửa</button>
                                     <button style={styles.actionButton}>Xoá</button>
@@ -1618,1151 +2723,283 @@ const SubdivisionTab = ({ projectId }) => {
     );
 };
 
-const BlocksTab = ({ setView, onEditBlock, blocks, onDelete, onBulkDelete, selectedIds, onSelectRow, onSelectAll, isAllSelected, onToggleVisibility }) => {
-    const handleAdd = () => {
-        setView('products.projects.detail.addBlock');
-    };
-    const handleImport = () => alert('Chức năng Import đang được phát triển.');
-
-    const columns = [
-        { key: 'name', header: 'Tên Khối' }, 
-        { key: 'type', header: 'Loại hình' },
-        { 
-            key: 'visible', 
-            header: 'Hiển thị', 
-            render: (item) => (
-                <ToggleSwitch 
-                    checked={item.visible} 
-                    onChange={() => onToggleVisibility(item.id)}
-                />
-            )
-        }
-    ];
-
-    return <TabularDataManagement 
-                title="Quản lý Khối Bất động sản"
-                description="Khối (Tiểu khu) là một cụm công trình/sản phẩm cụ thể (như một tòa nhà chung cư, một khu biệt thự) nằm bên trong một Phân khu của dự án"
-                columns={columns}
-                data={blocks}
-                onAdd={handleAdd}
-                onEdit={onEditBlock}
-                onImport={handleImport}
-                onDelete={onDelete}
-                onBulkDelete={onBulkDelete}
-                selectedIds={selectedIds}
-                onSelectRow={onSelectRow}
-                onSelectAll={onSelectAll}
-                isAllSelected={isAllSelected}
-                // FIX: Added the required 'renderActions' prop to fix a TypeScript error.
-                renderActions={null}
-            />;
-};
-
-const IndependentProductsTab = ({ projectId }) => {
-    const [products, setProducts] = useState(mockIndependentProducts.filter(p => p.projectId === projectId));
-
-    const handleAdd = () => {
-        const code = prompt("Nhập mã sản phẩm (VD: VILLA-02):");
-        if (code) {
-            setProducts(prev => [...prev, { 
-                id: Date.now(), 
-                projectId, 
-                code, 
-                type: 'Biệt thự', 
-                area: 200, 
-                status: 'Còn trống' 
-            }]);
-        }
-    };
-
-    const handleDelete = (id) => {
-        if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-            setProducts(prev => prev.filter(p => p.id !== id));
-        }
-    };
-    
-    const handleEdit = (product) => {
-        alert(`Chức năng sửa cho sản phẩm "${product.code}" đang được phát triển.`);
-    };
-
-    const columns = [
-        { key: 'code', header: 'Mã sản phẩm' },
-        { key: 'type', header: 'Loại hình' },
-        { key: 'area', header: 'Diện tích (m²)' },
-        { key: 'status', header: 'Trạng thái' }
-    ];
-
-    return (
-        <TabularDataManagement
-            title="Quản lý sản phẩm độc lập"
-            description="Thêm và quản lý các sản phẩm đơn lẻ như biệt thự, nhà phố không thuộc một khối/tòa nhà cụ thể."
-            columns={columns}
-            data={products}
-            onAdd={handleAdd}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            // FIX: Added missing 'onImport' prop to fix TypeScript error.
-            onImport={null}
-            selectedIds={new Set()}
-            onSelectRow={()=>{}}
-            onSelectAll={()=>{}}
-            isAllSelected={false}
-            onBulkDelete={()=>{}}
-            renderActions={null}
-        />
-    );
-};
-
-const AddUnitTypeModal = ({ isOpen, onClose, onSave }) => {
-    if (!isOpen) return null;
-    
-    const [name, setName] = useState('');
-    const [type, setType] = useState('Căn hộ chung cư');
-    const [image, setImage] = useState(null);
-    const [fromFloor, setFromFloor] = useState('');
-    const [toFloor, setToFloor] = useState('');
-
-    const UNIT_TYPE_OPTIONS = ["Căn hộ chung cư", "Penthouse", "Duplex", "Condotel", "Officetel", "Shophouse", "Biệt thự", "Nhà liền kề"];
-
-    const handleSave = () => {
-        if (!name || !fromFloor || !toFloor) {
-            alert('Vui lòng điền đầy đủ thông tin bắt buộc.');
-            return;
-        }
-        onSave({ id: Date.now(), name, type, image, fromFloor, toFloor });
-        onClose();
-    };
-    
-    return (
-        <div style={styles.modalBackdrop} onClick={onClose}>
-            <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
-                <h3 style={styles.modalHeader}>Thêm loại căn hộ</h3>
-                <button style={styles.modalCloseButton} onClick={onClose}><XIcon /></button>
-                <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>Tên loại căn</label>
-                    <input type="text" style={styles.formInput} value={name} onChange={e => setName(e.target.value)} placeholder="VD: Căn góc 2 phòng ngủ 75m2" />
-                </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>Phân loại</label>
-                    <select style={styles.formInput} value={type} onChange={e => setType(e.target.value)}>
-                        {UNIT_TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>Ảnh mặt bằng loại căn</label>
-                    <input type="file" style={styles.formInput} accept="image/*" onChange={e => setImage(e.target.files ? e.target.files[0] : null)} />
-                </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>Tầng áp dụng</label>
-                    <div style={styles.formGrid}>
-                        <input type="number" style={styles.formInput} value={fromFloor} onChange={e => setFromFloor(e.target.value)} placeholder="Từ tầng" />
-                        <input type="number" style={styles.formInput} value={toFloor} onChange={e => setToFloor(e.target.value)} placeholder="Đến tầng" />
-                    </div>
-                </div>
-                <div style={styles.formFooter}>
-                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={onClose}>Hủy</button>
-                    <button style={styles.button} onClick={handleSave}>Lưu</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
-const AddFloorPlanView = ({ project, setView, onAddFloorPlan }) => {
-    const [planName, setPlanName] = useState('');
-    const [planImage, setPlanImage] = useState(null);
-    const [unitTypes, setUnitTypes] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
-    const handleAddUnitType = (newUnit) => {
-        setUnitTypes(prev => [...prev, newUnit]);
-    };
-
-    const handleDeleteUnitType = (id) => {
-        setUnitTypes(prev => prev.filter(unit => unit.id !== id));
-    };
-
-    const handleSubmit = () => {
-        if (!planName) {
-            alert('Vui lòng nhập tên mặt bằng.');
-            return;
-        }
-        onAddFloorPlan({
-            projectId: project.id,
-            code: planName, // Using planName as code for now
-            unitTypes,
-            image: planImage
-        });
-        setView('products.projects.detail'); // Go back after saving
-    };
-
-    return (
-        <div>
-            <AddUnitTypeModal 
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSave={handleAddUnitType}
-            />
-            <div style={{ marginBottom: '20px' }}>
-                <button onClick={() => setView('products.projects.detail')} style={{...styles.actionButton, border: 'none', padding: '5px 0', marginBottom: '10px'}}>
-                    &larr; Quay lại chi tiết dự án
-                </button>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{...styles.header, marginBottom: 0 }}>Tạo mặt bằng mới</h2>
-                    <div>
-                         <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={() => setView('products.projects.detail')}>Hủy</button>
-                         <button style={{...styles.button, marginLeft: '10px'}} onClick={handleSubmit}>Lưu</button>
-                    </div>
-                </div>
-            </div>
-
-            <div style={styles.formPageContainer}>
-                {/* Section 1: General Info */}
-                <div style={styles.formSection}>
-                    <h3 style={styles.formSectionHeader}>Thông tin chung</h3>
-                    <div style={styles.formGroup}>
-                        <label style={styles.formLabel}>Tên mặt bằng</label>
-                        <input type="text" style={styles.formInput} value={planName} onChange={e => setPlanName(e.target.value)} placeholder="VD: Mặt bằng tầng 5-20 tòa nhà S1" />
-                    </div>
-                    <div style={styles.formGroup}>
-                        <label style={styles.formLabel}>Ảnh mặt bằng tổng thể</label>
-                        <input type="file" style={styles.formInput} accept="image/*" onChange={e => setPlanImage(e.target.files ? e.target.files[0] : null)} />
-                    </div>
-                </div>
-
-                {/* Section 2: Unit types */}
-                <div style={styles.formSection}>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h3 style={{...styles.formSectionHeader, border: 'none', padding: 0, margin: 0}}>Các loại căn hộ</h3>
-                        <button style={styles.button} onClick={() => setIsModalOpen(true)}>Thêm mới loại căn</button>
-                    </div>
-                    <div style={styles.tableContainer}>
-                        <table style={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th style={styles.th}>Tên loại căn</th>
-                                    <th style={styles.th}>Phân loại</th>
-                                    <th style={styles.th}>Tầng áp dụng</th>
-                                    <th style={styles.th}>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {unitTypes.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} style={{...styles.td, textAlign: 'center', color: 'var(--text-secondary)'}}>Chưa có loại căn nào.</td>
-                                    </tr>
-                                )}
-                                {unitTypes.map(unit => (
-                                    <tr key={unit.id}>
-                                        <td style={styles.td}>{unit.name}</td>
-                                        <td style={styles.td}>{unit.type}</td>
-                                        <td style={styles.td}>{`Tầng ${unit.fromFloor} - ${unit.toFloor}`}</td>
-                                        <td style={styles.td}>
-                                            <button style={styles.actionButton}>Sửa</button>
-                                            <button style={styles.actionButton} onClick={() => handleDeleteUnitType(unit.id)}>Xoá</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
-const FloorPlanTab = ({ setView, projectId, plans, onAddFloorPlan, onDelete, onBulkDelete, selectedIds, onSelectRow, onSelectAll, isAllSelected }) => {
-    const handleAdd = () => {
-        setView('products.projects.detail.addFloorPlan');
-    };
-     const handleImport = () => alert('Chức năng Import đang được phát triển.');
-
-     // FIX: Added the required 'onEdit' prop to the TabularDataManagement component to fix a TypeScript error.
-     return <TabularDataManagement 
-                title="Thư viện mặt bằng"
-                description=""
-                columns={[
-                    { key: 'code', header: 'Mã' }, 
-                    { key: 'description', header: 'Mô tả' },
-                    { key: 'area', header: 'Diện tích (m²)' }
-                ]}
-                data={plans}
-                onAdd={handleAdd}
-                onEdit={() => alert('Chức năng Sửa đang được phát triển.')}
-                onImport={handleImport}
-                onDelete={onDelete}
-                onBulkDelete={onBulkDelete}
-                selectedIds={selectedIds}
-                onSelectRow={onSelectRow}
-                onSelectAll={onSelectAll}
-                isAllSelected={isAllSelected}
-                // FIX: Added the required 'renderActions' prop to fix a TypeScript error.
-                renderActions={null}
-            />;
-};
-
-const AgencyTab = ({ projectId, allUsers }) => {
-    const agencies = allUsers.filter(u => u.role === 'Đại lý');
-    const [assignedAgencyIds, setAssignedAgencyIds] = useState(
-        new Set(mockProjectAgencies.filter(pa => pa.projectId === projectId).map(pa => pa.agencyId))
-    );
-
-    const handleToggleAgency = (agencyId) => {
-        setAssignedAgencyIds(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(agencyId)) {
-                newSet.delete(agencyId);
-            } else {
-                newSet.add(agencyId);
-            }
-            return newSet;
-        });
-    };
-    
-    return (
-        <div>
-             <h3 style={{ margin: '0 0 20px 0', fontSize: '20px' }}>Quản lý Đại lý</h3>
-             <div style={{...styles.card, padding: 0}}>
-                 {agencies.map((agency, index) => (
-                     <div key={agency.id} style={{ display: 'flex', alignItems: 'center', padding: '15px', borderBottom: index < agencies.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
-                         <input 
-                             type="checkbox" 
-                             style={{ width: '18px', height: '18px', marginRight: '15px'}}
-                             checked={assignedAgencyIds.has(agency.id)}
-                             onChange={() => handleToggleAgency(agency.id)}
-                         />
-                         <div>
-                             <div style={{ fontWeight: 600 }}>{agency.name}</div>
-                             <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{agency.email}</div>
-                         </div>
-                     </div>
-                 ))}
-             </div>
-              <div style={styles.formFooter}>
-                <button style={styles.button}>Lưu thay đổi</button>
-            </div>
-        </div>
-    );
-};
-
-
-const ProjectDetailView = ({ project, setView, users, blocks, floorPlans, onEditBlock, onDeleteBlock, onBulkDeleteBlocks, selectedBlockIds, setSelectedBlockIds, onAddFloorPlan, onDeleteFloorPlan, onBulkDeleteFloorPlans, selectedFloorPlanIds, setSelectedFloorPlanIds, onToggleBlockVisibility }) => {
-    const [activeTab, setActiveTab] = useState('overview');
-    
-    const projectBlocks = blocks.filter(b => b.projectId === project.id);
-    const projectFloorPlans = floorPlans.filter(p => p.projectId === project.id);
-
-    // --- SELECTION LOGIC ---
-    const handleSelectBlock = (id) => {
-        setSelectedBlockIds(prev => {
-            const newSelection = new Set(prev);
-            if (newSelection.has(id)) newSelection.delete(id);
-            else newSelection.add(id);
-            return newSelection;
-        });
-    };
-    const handleSelectAllBlocks = (e) => {
-        if (e.target.checked) setSelectedBlockIds(new Set(projectBlocks.map(i => i.id)));
-        else setSelectedBlockIds(new Set());
-    };
-    const isAllBlocksSelected = projectBlocks.length > 0 && selectedBlockIds.size === projectBlocks.length;
-
-    const handleSelectFloorPlan = (id) => {
-        setSelectedFloorPlanIds(prev => {
-            const newSelection = new Set(prev);
-            if (newSelection.has(id)) newSelection.delete(id);
-            else newSelection.add(id);
-            return newSelection;
-        });
-    };
-    const handleSelectAllFloorPlans = (e) => {
-        if (e.target.checked) setSelectedFloorPlanIds(new Set(projectFloorPlans.map(i => i.id)));
-        else setSelectedFloorPlanIds(new Set());
-    };
-    const isAllFloorPlansSelected = projectFloorPlans.length > 0 && selectedFloorPlanIds.size === projectFloorPlans.length;
-    // --- END SELECTION LOGIC ---
-
-
-    const tabs = [
-        { id: 'overview', label: 'Tổng quan' },
-        { id: 'subdivision', label: 'Phân khu' },
-        { id: 'blocks', label: 'Khối bất động sản' },
-        { id: 'independent_products', label: 'Sản phẩm độc lập' },
-        { id: 'floorplan', label: 'Thư viện mặt bằng' },
-        { id: 'agency', label: 'Đại lý' },
-    ];
-
-    const renderTabContent = () => {
-        switch (activeTab) {
-            case 'subdivision': return <SubdivisionTab projectId={project.id} />;
-            case 'blocks': return <BlocksTab 
-                                    setView={setView} 
-                                    onEditBlock={onEditBlock}
-                                    blocks={projectBlocks}
-                                    onDelete={onDeleteBlock}
-                                    onBulkDelete={onBulkDeleteBlocks}
-                                    selectedIds={selectedBlockIds}
-                                    onSelectRow={handleSelectBlock}
-                                    onSelectAll={handleSelectAllBlocks}
-                                    isAllSelected={isAllBlocksSelected}
-                                    onToggleVisibility={onToggleBlockVisibility}
-                                />;
-            case 'independent_products': return <IndependentProductsTab projectId={project.id} />;
-            case 'floorplan': return <FloorPlanTab 
-                                        setView={setView}
-                                        projectId={project.id} 
-                                        plans={projectFloorPlans} 
-                                        onAddFloorPlan={onAddFloorPlan}
-                                        onDelete={onDeleteFloorPlan}
-                                        onBulkDelete={onBulkDeleteFloorPlans}
-                                        selectedIds={selectedFloorPlanIds}
-                                        onSelectRow={handleSelectFloorPlan}
-                                        onSelectAll={handleSelectAllFloorPlans}
-                                        isAllSelected={isAllFloorPlansSelected}
-                                    />;
-            case 'agency': return <AgencyTab projectId={project.id} allUsers={users} />;
-            case 'overview':
-            default:
-                return <OverviewTab project={project} />;
-        }
-    };
-    
-    return (
-        <div>
-            <div style={{ marginBottom: '20px' }}>
-                <button onClick={() => setView('products.projects')} style={{...styles.actionButton, border: 'none', padding: '5px 0', marginBottom: '10px'}}>
-                    &larr; Quay lại danh sách dự án
-                </button>
-                <h2 style={{...styles.header, marginBottom: 0 }}>{project.name}</h2>
-            </div>
-            <div style={styles.tabContainer}>
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        style={{ ...styles.tabButton, ...(activeTab === tab.id ? styles.activeTabButton : {}) }}
-                        onClick={() => setActiveTab(tab.id)}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-            <div style={styles.tabContent}>
-                {renderTabContent()}
-            </div>
-        </div>
-    );
-};
-
-
-// --- BLOCK DETAIL VIEW AND TABS (NEW) ---
-
-const BlockGeneralInfoTab = ({ block, onUpdateBlock }) => {
-    // A simplified version of AddBlockView for editing
-    const [formData, setFormData] = useState(block);
-
-    const handleChange = (field, value) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    return (
-        <div style={{maxWidth: '900px', margin: '0 auto'}}>
-            <div style={styles.formSection}>
-                <h3 style={styles.formSectionHeader}>Thông tin chung</h3>
-                <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>Tên thương mại</label>
-                    <input type="text" style={styles.formInput} value={formData.name} onChange={e => handleChange('name', e.target.value)} />
-                </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>Loại hình</label>
-                    <input type="text" style={styles.formInput} value={formData.type} onChange={e => handleChange('type', e.target.value)} />
-                </div>
-                {/* Add other fields from AddBlockView here for editing */}
-            </div>
-             <div style={styles.formFooter}>
-                <button style={styles.button} onClick={() => onUpdateBlock(formData)}>Lưu thay đổi</button>
-            </div>
-        </div>
-    );
-};
-
-const BlockFloorPlanManagementTab = ({ block }) => {
-    const handleSaveAsTemplate = (plan) => alert(`Lưu mặt bằng "${plan.name}" làm template.`);
-    const handleCreateUnits = () => alert('Chức năng "Tạo giỏ hàng" sẽ tự động tạo các căn hộ cho khối này dựa trên mặt bằng đã chọn.');
-
-    const mockBlockFloorPlans = [
-        { id: 1, name: 'Mặt bằng thương mại', type: 'Tầng 1-4' },
-        { id: 2, name: 'Mặt bằng căn hộ điển hình', type: 'Tầng 5-20' },
-        { id: 3, name: 'Mặt bằng Penthouse', type: 'Tầng 21' },
-    ];
-    const [plans, setPlans] = useState(mockBlockFloorPlans);
-
-    const renderPlanActions = (item) => (
-        <>
-            <button style={{...styles.actionButton, marginRight: 0}} onClick={() => alert(`Sửa mặt bằng ${item.name}`)}>Sửa</button>
-            <button style={{...styles.actionButton, marginRight: 0}} onClick={() => setPlans(p => p.filter(plan => plan.id !== item.id))}>Xoá</button>
-            <button style={styles.actionButton} onClick={() => handleSaveAsTemplate(item)}>Lưu template</button>
-        </>
-    );
-
-    return (
-         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ margin: 0, fontSize: '20px' }}>Quản lý mặt bằng cho {block.name}</h3>
-                <div style={{display: 'flex', gap: '10px'}}>
-                    <button style={styles.button} onClick={handleCreateUnits}>Tạo giỏ hàng</button>
-                </div>
-            </div>
-            <p style={{ color: 'var(--text-secondary)', marginTop: 0}}>
-                Thêm mới hoặc import mặt bằng tầng điển hình cho khối này. Sau khi có mặt bằng, bạn có thể "Tạo giỏ hàng" để hệ thống tự động sinh ra danh sách các căn hộ.
-            </p>
-            {/* FIX: Added missing required props 'onEdit' and 'onDelete' to fix a TypeScript error. */}
-            <TabularDataManagement
-                title=""
-                description=""
-                columns={[
-                    {key: 'name', header: 'Tên mặt bằng'}, 
-                    {key: 'type', header: 'Phạm vi áp dụng'}
-                ]}
-                data={plans}
-                onAdd={() => alert('Thêm mặt bằng mới...')}
-                onImport={() => alert('Import mặt bằng...')}
-                renderActions={renderPlanActions}
-                onBulkDelete={() => alert('Xoá các mặt bằng đã chọn...')}
-                selectedIds={new Set()}
-                onSelectRow={() => {}}
-                onSelectAll={() => {}}
-                isAllSelected={false}
-                onEdit={null}
-                onDelete={null}
-            />
-        </div>
-    );
-};
-
-const BlockUnitManagementTab = ({ block, units, onUpdateUnit }) => {
-    const [filters, setFilters] = useState({ floor: '', type: '', status: '' });
-    const [editingCell, setEditingCell] = useState(null); // { unitId: number, field: string }
-
-    const handleFilterChange = (field, value) => {
-        setFilters(prev => ({...prev, [field]: value}));
-    };
-    
-    const handleUnitUpdate = (unitId, field, value) => {
-        onUpdateUnit(unitId, field, value);
-        setEditingCell(null); // Exit editing mode
-    };
-
-    const filteredUnits = useMemo(() => {
-        return units.filter(unit => 
-            (filters.floor ? String(unit.floor) === filters.floor : true) &&
-            (filters.type ? unit.type === filters.type : true) &&
-            (filters.status ? unit.status === filters.status : true)
-        );
-    }, [units, filters]);
-    
-    const uniqueUnitTypes = [...new Set(units.map(u => u.type))];
-    const STATUS_OPTIONS = ['Còn trống', 'Đã cọc', 'Đã bán'];
-    
-    const renderEditableCell = (unit, field) => {
-        const isEditing = editingCell?.unitId === unit.id && editingCell?.field === field;
-        
-        if (isEditing) {
-            if (field === 'status') {
-                return (
-                    <select
-                        style={{...styles.formInput, padding: '5px'}}
-                        defaultValue={unit.status}
-                        onBlur={(e) => handleUnitUpdate(unit.id, field, e.target.value)}
-                        onChange={(e) => handleUnitUpdate(unit.id, field, e.target.value)}
-                        autoFocus
-                    >
-                        {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                );
-            }
-             return (
-                <input
-                    type="text"
-                    style={{...styles.formInput, padding: '5px'}}
-                    defaultValue={unit[field]}
-                    onBlur={(e) => handleUnitUpdate(unit.id, field, e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-                    autoFocus
-                />
-            );
-        }
-
-        return <span onClick={() => setEditingCell({ unitId: unit.id, field })}>{unit[field]}</span>
-    }
-
-    return (
-        <div>
-             <h3 style={{ margin: 0, fontSize: '20px', marginBottom: '20px' }}>Quản lý giỏ hàng - {block.name}</h3>
-             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-                <div>
-                    <label style={styles.formLabel}>Tầng</label>
-                    <input type="number" style={styles.formInput} placeholder="Tất cả" value={filters.floor} onChange={(e) => handleFilterChange('floor', e.target.value)}/>
-                </div>
-                 <div>
-                    <label style={styles.formLabel}>Loại căn</label>
-                    <select style={styles.formInput} value={filters.type} onChange={(e) => handleFilterChange('type', e.target.value)}>
-                        <option value="">Tất cả</option>
-                        {uniqueUnitTypes.map(type => <option key={type} value={type}>{type}</option>)}
-                    </select>
-                </div>
-                 <div>
-                    <label style={styles.formLabel}>Trạng thái</label>
-                    <select style={styles.formInput} value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)}>
-                        <option value="">Tất cả</option>
-                        {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                </div>
-             </div>
-             <div style={styles.tableContainer}>
-                <table style={styles.table}>
-                    <thead>
-                        <tr>
-                            <th style={styles.th}>Mã căn</th>
-                            <th style={styles.th}>Tầng</th>
-                            <th style={styles.th}>Loại căn</th>
-                            <th style={styles.th}>Diện tích (m²)</th>
-                            <th style={styles.th}>Giá</th>
-                            <th style={styles.th}>Trạng thái</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredUnits.map(unit => (
-                            <tr key={unit.id}>
-                                <td style={styles.td}>{renderEditableCell(unit, 'code')}</td>
-                                <td style={styles.td}>{unit.floor}</td>
-                                <td style={styles.td}>{unit.type}</td>
-                                <td style={styles.td}>{renderEditableCell(unit, 'area')}</td>
-                                <td style={styles.td}>{renderEditableCell(unit, 'price')}</td>
-                                <td style={styles.td}>{renderEditableCell(unit, 'status')}</td>
-                            </tr>
-                        ))}
-                         {filteredUnits.length === 0 && (
-                            <tr>
-                                <td colSpan={6} style={{...styles.td, textAlign: 'center', color: 'var(--text-secondary)'}}>
-                                    Không có căn hộ nào khớp với bộ lọc.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-             </div>
-        </div>
-    );
-};
-
-
-const BlockDetailView = ({ block, project, setView, units, onUpdateUnit, onUpdateBlock }) => {
-    const [activeTab, setActiveTab] = useState('units');
-
-    if (!block || !project) {
-        // This can happen if the user refreshes the page on this view.
-        // In a real app, you'd fetch the data based on an ID from the URL.
-        return (
-            <div>
-                <p>Không tìm thấy dữ liệu. Vui lòng quay lại.</p>
-                <button onClick={() => setView('products.projects')}>Quay lại danh sách dự án</button>
-            </div>
-        );
-    }
-    
-    const blockUnits = units.filter(u => u.blockId === block.id);
-
-    const tabs = [
-        { id: 'info', label: 'Thông tin chung' },
-        { id: 'floorplan', label: 'Quản lý mặt bằng' },
-        { id: 'units', label: 'Quản lý giỏ hàng' },
-    ];
-
-    const renderTabContent = () => {
-        switch (activeTab) {
-            case 'info': return <BlockGeneralInfoTab block={block} onUpdateBlock={onUpdateBlock} />;
-            case 'floorplan': return <BlockFloorPlanManagementTab block={block} />;
-            case 'units':
-            default:
-                return <BlockUnitManagementTab block={block} units={blockUnits} onUpdateUnit={onUpdateUnit} />;
-        }
-    };
-    
-    return (
-        <div>
-            <div style={{ marginBottom: '20px' }}>
-                <button onClick={() => setView('products.projects.detail')} style={{...styles.actionButton, border: 'none', padding: '5px 0', marginBottom: '10px'}}>
-                    &larr; Quay lại chi tiết dự án
-                </button>
-                <h2 style={{...styles.header, marginBottom: 0 }}>{block.name} <span style={{color: 'var(--text-secondary)', fontWeight: 400}}>- {project.name}</span></h2>
-            </div>
-            <div style={styles.tabContainer}>
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        style={{ ...styles.tabButton, ...(activeTab === tab.id ? styles.activeTabButton : {}) }}
-                        onClick={() => setActiveTab(tab.id)}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-            <div> {/* Removed tabContent style to avoid double boxing */}
-                {renderTabContent()}
-            </div>
-        </div>
-    );
-};
-
-
-const RetailPropertyView = () => (
-    <div>
-        <h2 style={styles.header}>Quản lý Bất động sản lẻ</h2>
-        <div style={styles.toolbar}>
-            <button style={styles.button}>Thêm BĐS</button>
-        </div>
-        <div style={styles.tableContainer}>
-            <table style={styles.table}>
-                <thead>
-                    <tr>
-                        <th style={styles.th}>ID</th>
-                        <th style={styles.th}>Tên BĐS</th>
-                        <th style={styles.th}>Địa chỉ</th>
-                        <th style={styles.th}>Giá</th>
-                        <th style={styles.th}>Loại hình</th>
-                        <th style={styles.th}>Trạng thái</th>
-                        <th style={styles.th}>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {mockRetailProperties.map(prop => (
-                        <tr key={prop.id}>
-                            <td style={styles.td}>{prop.id}</td>
-                            <td style={styles.td}>{prop.name}</td>
-                            <td style={styles.td}>{prop.address}</td>
-                            <td style={styles.td}>{prop.price}</td>
-                            <td style={styles.td}>{prop.type}</td>
-                            <td style={styles.td}>{prop.status}</td>
-                            <td style={styles.td}>
-                                <button style={styles.actionButton}>Sửa</button>
-                                <button style={styles.actionButton}>Xoá</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </div>
-);
-
-const TransactionManagementView = () => {
-    const handleDownloadReceipt = (transaction) => {
-        alert(`Đang tải xuống biên lai cho giao dịch ${transaction.id}...`);
-    };
-
-    return (
-        <div>
-            <h2 style={styles.header}>Quản lý Giao dịch</h2>
-            <div style={styles.tableContainer}>
-                <table style={styles.table}>
-                    <thead>
-                        <tr>
-                            <th style={styles.th}>Mã Giao dịch</th>
-                            <th style={styles.th}>Sản phẩm</th>
-                            <th style={styles.th}>Khách hàng</th>
-                            <th style={styles.th}>Số tiền cọc</th>
-                            <th style={styles.th}>Ngày Giao dịch</th>
-                            <th style={styles.th}>Trạng thái</th>
-                            <th style={styles.th}>Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {mockTransactions.map(transaction => (
-                            <tr key={transaction.id}>
-                                <td style={{...styles.td, fontWeight: 500}}>{transaction.id}</td>
-                                <td style={styles.td}>
-                                    <div>{transaction.unitCode}</div>
-                                    <div style={{fontSize: '13px', color: 'var(--text-secondary)'}}>{transaction.projectName}</div>
-                                </td>
-                                <td style={styles.td}>{transaction.customerName}</td>
-                                <td style={styles.td}>{transaction.amount}</td>
-                                <td style={styles.td}>{transaction.date}</td>
-                                <td style={styles.td}>{transaction.status}</td>
-                                <td style={styles.td}>
-                                    <button style={{...styles.actionButton, display: 'inline-flex', alignItems: 'center', gap: '5px'}} onClick={() => handleDownloadReceipt(transaction)}>
-                                        <DownloadIcon /> Tải biên lai
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-};
-
-const AddLivestreamModal = ({ isOpen, onClose, onAdd }) => {
-    const [title, setTitle] = useState('');
-    const [startTime, setStartTime] = useState('');
-    const [youtubeLink, setYoutubeLink] = useState('');
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-    if (!isOpen) return null;
-
-    const validate = () => {
-        const newErrors: { [key: string]: string } = {};
-        if (!title.trim()) newErrors.title = "Vui lòng nhập tiêu đề.";
-        if (!startTime) newErrors.startTime = "Vui lòng chọn thời gian bắt đầu.";
-
-        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
-        if (!youtubeLink.trim()) {
-            newErrors.youtubeLink = "Vui lòng nhập Link YouTube.";
-        } else if (!youtubeRegex.test(youtubeLink)) {
-            newErrors.youtubeLink = "Link YouTube không hợp lệ.";
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = () => {
-        if (validate()) {
-            onAdd({ title, startTime, youtubeLink });
-            handleClose();
-        }
-    };
-    
-    const handleClose = () => {
-        setTitle('');
-        setStartTime('');
-        setYoutubeLink('');
-        setErrors({});
-        onClose();
-    };
-
-    return (
-        <div style={styles.modalBackdrop} onClick={handleClose}>
-            <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
-                <h3 style={styles.modalHeader}>Tạo lịch Livestream mới</h3>
-                <button style={styles.modalCloseButton} onClick={handleClose}><XIcon /></button>
-                <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>Tiêu đề</label>
-                    <input type="text" style={styles.formInput} value={title} onChange={e => setTitle(e.target.value)} />
-                    {errors.title && <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>{errors.title}</p>}
-                </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>Thời gian bắt đầu</label>
-                    <input type="datetime-local" style={styles.formInput} value={startTime} onChange={e => setStartTime(e.target.value)} />
-                     {errors.startTime && <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>{errors.startTime}</p>}
-                </div>
-                <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>Link YouTube</label>
-                    <input type="text" style={styles.formInput} value={youtubeLink} onChange={e => setYoutubeLink(e.target.value)} placeholder="https://www.youtube.com/watch?v=..."/>
-                     {errors.youtubeLink && <p style={{ color: 'red', fontSize: '13px', margin: '5px 0 0' }}>{errors.youtubeLink}</p>}
-                </div>
-                <div style={styles.formFooter}>
-                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={handleClose}>Hủy</button>
-                    <button style={styles.button} onClick={handleSubmit}>Lưu</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const LivestreamManagementView = ({ livestreams, onAdd, onDelete }) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    
-    const now = new Date();
-    const upcomingStreams = livestreams.filter(s => new Date(s.startTime) >= now).sort((a,b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
-    const pastStreams = livestreams.filter(s => new Date(s.startTime) < now).sort((a,b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-
-    return (
-        <div>
-            <AddLivestreamModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onAdd={onAdd} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ ...styles.header, marginBottom: 0 }}>Quản lý Livestream</h2>
-                <button style={styles.button} onClick={() => setIsModalOpen(true)}>Tạo lịch mới</button>
-            </div>
-
-            <div style={styles.formSection}>
-                <h3 style={styles.formSectionHeader}>Sắp diễn ra</h3>
-                <div style={styles.tableContainer}>
-                    <table style={styles.table}>
-                        <thead>
-                            <tr>
-                                <th style={styles.th}>Tiêu đề</th>
-                                <th style={styles.th}>Thời gian bắt đầu</th>
-                                <th style={styles.th}>Link</th>
-                                <th style={styles.th}>Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {upcomingStreams.length === 0 && <tr><td colSpan={4} style={{...styles.td, textAlign: 'center'}}>Chưa có lịch livestream nào.</td></tr>}
-                            {upcomingStreams.map(stream => (
-                                <tr key={stream.id}>
-                                    <td style={styles.td}>{stream.title}</td>
-                                    <td style={styles.td}>{formatDate(stream.startTime)}</td>
-                                    <td style={styles.td}><a href={stream.youtubeLink} target="_blank" rel="noopener noreferrer">Xem link</a></td>
-                                    <td style={styles.td}>
-                                        <button style={styles.actionButton}><EditIcon /></button>
-                                        <button style={styles.actionButton} onClick={() => onDelete(stream.id)}><TrashIcon /></button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div style={styles.formSection}>
-                <h3 style={styles.formSectionHeader}>Đã kết thúc</h3>
-                <div style={styles.tableContainer}>
-                     <table style={styles.table}>
-                        <thead>
-                            <tr>
-                                <th style={styles.th}>Tiêu đề</th>
-                                <th style={styles.th}>Thời gian bắt đầu</th>
-                                <th style={styles.th}>Link</th>
-                                <th style={styles.th}>Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {pastStreams.length === 0 && <tr><td colSpan={4} style={{...styles.td, textAlign: 'center'}}>Chưa có livestream nào đã kết thúc.</td></tr>}
-                            {pastStreams.map(stream => (
-                                <tr key={stream.id}>
-                                    <td style={styles.td}>{stream.title}</td>
-                                    <td style={styles.td}>{formatDate(stream.startTime)}</td>
-                                    <td style={styles.td}><a href={stream.youtubeLink} target="_blank" rel="noopener noreferrer">Xem link</a></td>
-                                    <td style={styles.td}>
-                                         <button style={styles.actionButton} onClick={() => onDelete(stream.id)}><TrashIcon /></button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 const InboxView = () => {
-    const [selectedConversationId, setSelectedConversationId] = useState(1);
-    const selectedConversation = mockConversations.find(c => c.id === selectedConversationId);
-    const messages = mockMessages[selectedConversationId] || [];
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [selectedConversation, setSelectedConversation] = useState(mockConversations[0]);
+    
+    if (!selectedConversation) {
+        return <div><h2 style={styles.header}>Inbox</h2><p>No conversations found.</p></div>
+    }
 
     return (
-        <>
+        <div style={{display: 'flex', flexDirection: 'column', height: '100%'}}>
             <h2 style={styles.header}>Inbox</h2>
             <div style={styles.inboxContainer}>
                 <div style={styles.conversationList}>
-                    {mockConversations.map(convo => (
-                        <div
-                            key={convo.id}
-                            style={{ ...styles.conversationItem, backgroundColor: selectedConversationId === convo.id ? 'var(--active-item-bg)' : 'transparent' }}
-                            onClick={() => setSelectedConversationId(convo.id)}
+                    {mockConversations.map(conv => (
+                        <div 
+                            key={conv.id} 
+                            style={{
+                                ...styles.conversationItem,
+                                backgroundColor: selectedConversation.id === conv.id ? 'var(--active-item-bg)' : 'transparent',
+                            }}
+                            onClick={() => setSelectedConversation(conv)}
                         >
-                            <div style={styles.avatar}>{convo.avatar}</div>
+                            <div style={styles.avatar}>{conv.avatar}</div>
                             <div style={styles.conversationDetails}>
-                                <p style={styles.customerName}>{convo.customerName}</p>
-                                <p style={styles.lastMessage}>{convo.lastMessage}</p>
+                                <p style={styles.customerName}>{conv.customerName}</p>
+                                <p style={styles.lastMessage}>{conv.lastMessage}</p>
                             </div>
                         </div>
                     ))}
                 </div>
                 <div style={styles.chatWindow}>
-                    {selectedConversation ? (
-                        <>
-                            <div style={styles.chatHeader}>{selectedConversation.customerName}</div>
-                            <div style={styles.messageList}>
-                                {messages.map(msg => (
-                                    <div key={msg.id} style={{ ...styles.messageBubble, ...(msg.sender === 'admin' ? styles.adminMessage : styles.customerMessage) }}>
-                                        {msg.text}
-                                    </div>
-                                ))}
+                    <div style={styles.chatHeader}>{selectedConversation.customerName}</div>
+                    <div style={styles.messageList}>
+                        {mockMessages[selectedConversation.id as keyof typeof mockMessages].map((msg: any) => (
+                            <div key={msg.id} style={{
+                                ...styles.messageBubble,
+                                ...(msg.sender === 'admin' ? styles.adminMessage : styles.customerMessage)
+                            }}>
+                                {msg.text}
                             </div>
-                            <div style={styles.messageInputContainer}>
-                                <input type="text" placeholder="Nhập tin nhắn..." style={styles.messageInput} />
-                                <button style={styles.sendButton}>Gửi</button>
-                            </div>
-                        </>
-                    ) : (
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-                            Chọn một cuộc trò chuyện để bắt đầu
-                        </div>
-                    )}
+                        ))}
+                    </div>
+                    <div style={styles.messageInputContainer}>
+                        <input type="text" style={styles.messageInput} placeholder="Type a message..." />
+                        <button style={styles.sendButton}>Send</button>
+                    </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
 
+// --- APP ---
 const App = () => {
-    const [activeView, setActiveView] = useState<View>('dashboard');
-    const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [view, setViewRaw] = useState('dashboard');
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [viewState, setViewState] = useState<any>(null);
+    // FIX: Replace `aistudio.useState` with `useState`.
     const [projects, setProjects] = useState(mockProjects);
-    const [blocks, setBlocks] = useState(mockBlocks);
-    const [floorPlans, setFloorPlans] = useState(mockFloorPlans);
-    const [units, setUnits] = useState(mockUnits);
-    const [livestreams, setLivestreams] = useState(mockLivestreams);
-    const [selectedProject, setSelectedProject] = useState(null);
-    const [selectedBlock, setSelectedBlock] = useState(null);
-    const [selectedBlockIds, setSelectedBlockIds] = useState(new Set());
-    const [selectedFloorPlanIds, setSelectedFloorPlanIds] = useState(new Set());
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [subdivisions, setSubdivisions] = useState(mockSubdivisions);
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [unitTypes, setUnitTypes] = useState(mockUnitTypes);
 
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-    const handleAddProject = (newProject) => {
-        setProjects(prev => [{ ...newProject, id: Date.now() }, ...prev]);
-        setActiveView('products.projects');
+    const setView = (newView: string, state: any = null) => {
+        setViewRaw(newView);
+        setViewState(state);
     };
 
-    const handleAddBlock = (newBlock) => {
-        setBlocks(prev => [{ ...newBlock, id: Date.now() }, ...prev]);
-        setActiveView('products.projects.detail');
+    const handleAddProject = (newProject: any) => {
+        const projectWithId = { ...newProject, id: Date.now(), createdAt: new Date().toISOString() };
+        setProjects(prev => [projectWithId, ...prev]);
+        setView('products.projects.detail', { project: projectWithId });
     };
     
-    const handleAddFloorPlan = (newPlan) => {
-        const simplifiedPlan = {
-            ...newPlan,
-            id: Date.now(),
-            description: `${newPlan.unitTypes.length} loại căn`,
-            area: 'N/A' 
-        };
-        setFloorPlans(prev => [...prev, simplifiedPlan]);
+    const handleToggleProjectVisibility = (id: number) => {
+        setProjects(prev => prev.map(p => p.id === id ? { ...p, visible: !p.visible } : p));
     };
 
-    const handleProjectVisibilityToggle = (projectId: number) => {
-        setProjects(prevProjects =>
-            prevProjects.map(p =>
-                p.id === projectId ? { ...p, visible: !p.visible } : p
-            )
-        );
-    };
-
-    const handleSelectProjectForDetail = (project) => {
-        setSelectedProject(project);
-        setSelectedBlockIds(new Set());
-        setSelectedFloorPlanIds(new Set());
-        setActiveView('products.projects.detail');
-    };
-    
-    const handleSelectBlockForDetail = (block) => {
-        setSelectedBlock(block);
-        setActiveView('products.projects.detail.blockDetail');
-    };
-
-    const handleDeleteBlock = (id) => setBlocks(prev => prev.filter(item => item.id !== id));
-    const handleBulkDeleteBlocks = () => {
-        setBlocks(prev => prev.filter(item => !selectedBlockIds.has(item.id)));
-        setSelectedBlockIds(new Set());
-    };
-    
-    const handleUpdateBlock = (updatedBlock) => {
-        setBlocks(prev => prev.map(block => block.id === updatedBlock.id ? updatedBlock : block));
-        setSelectedBlock(updatedBlock); // Keep the selected block updated
-        alert('Đã lưu thông tin khối!');
-    };
-
-    const handleToggleBlockVisibility = (blockId: number) => {
-        setBlocks(prevBlocks =>
-            prevBlocks.map(b =>
-                b.id === blockId ? { ...b, visible: !b.visible } : b
-            )
-        );
-    };
-
-    const handleDeleteFloorPlan = (id) => setFloorPlans(prev => prev.filter(item => item.id !== id));
-    const handleBulkDeleteFloorPlans = () => {
-        setFloorPlans(prev => prev.filter(item => !selectedFloorPlanIds.has(item.id)));
-        setSelectedFloorPlanIds(new Set());
-    };
-    
-    const handleUpdateUnit = (unitId, field, value) => {
-        setUnits(prevUnits => 
-            prevUnits.map(unit => 
-                unit.id === unitId ? { ...unit, [field]: value } : unit
-            )
-        );
-    };
-
-    const handleAddLivestream = (newStream) => {
-        setLivestreams(prev => [{...newStream, id: Date.now()}, ...prev]);
-    };
-
-    const handleDeleteLivestream = (id) => {
-        if(confirm('Bạn có chắc muốn xóa lịch livestream này?')) {
-            setLivestreams(prev => prev.filter(s => s.id !== id));
+    const handleDeleteProject = (project: any) => {
+        if(window.confirm(`Bạn có chắc muốn xóa dự án "${project.name}"?`)){
+            setProjects(prev => prev.filter(p => p.id !== project.id));
         }
+    };
+    
+    const handleBulkDeleteProjects = (ids: Set<number>) => {
+        if(window.confirm(`Bạn có chắc muốn xóa ${ids.size} dự án đã chọn?`)){
+            setProjects(prev => prev.filter(p => !ids.has(p.id)));
+        }
+    };
+
+    const handleBulkToggleProjectVisibility = (ids: Set<number>, visibility: boolean) => {
+        setProjects(prev => prev.map(p => ids.has(p.id) ? { ...p, visible: visibility } : p));
+    };
+    
+    const handleEditProject = (project: any) => {
+        setView('products.projects.detail', { project });
+    };
+    
+    const handleSaveSubdivisionBlock = (data: any, navigateAway = true) => {
+        if(data.id) { // Editing
+            const idToUpdate = data.id;
+            setSubdivisions(prev => prev.map(s => s.id === idToUpdate ? {...s, ...data} : s));
+             alert('Đã cập nhật!');
+        } else { // Adding
+            const newSubdivision = { ...data, id: Date.now(), createdAt: new Date().toISOString(), visible: true };
+            setSubdivisions(prev => [newSubdivision, ...prev]);
+             alert('Đã thêm mới!');
+        }
+        if (navigateAway) {
+            const returnPath = data.category === 'block' ? 'products.buildings' : 'products.subdivisions';
+            setView(returnPath);
+        }
+    };
+
+    const handleDeleteSubdivisionBlock = (item: any) => {
+        if(window.confirm(`Bạn có chắc muốn xóa "${item.name}"?`)){
+            setSubdivisions(prev => prev.filter(s => s.id !== item.id));
+        }
+    };
+    
+    const handleToggleSubdivisionVisibility = (id: number) => {
+        setSubdivisions(prev => prev.map(s => s.id === id ? { ...s, visible: !s.visible } : s));
+    };
+
+    const handleBulkDeleteSubdivisions = (ids: Set<number>) => {
+        if(window.confirm(`Bạn có chắc muốn xóa ${ids.size} mục đã chọn?`)){
+            setSubdivisions(prev => prev.filter(s => !ids.has(s.id)));
+        }
+    };
+
+    const handleBulkToggleSubdivisionVisibility = (ids: Set<number>, visibility: boolean) => {
+        setSubdivisions(prev => prev.map(s => ids.has(s.id) ? { ...s, visible: visibility } : s));
+    };
+
+    const handleSaveUnitType = (data: any) => {
+        if (view.includes('.edit')) { // Editing
+            const idToUpdate = viewState.item.id;
+            setUnitTypes(prev => prev.map(u => u.id === idToUpdate ? {...u, ...data} : u));
+            alert('Đã cập nhật Mẫu nhà!');
+        } else { // Adding
+            const newUnitType = { ...data, id: Date.now(), createdAt: new Date().toISOString() };
+            setUnitTypes(prev => [newUnitType, ...prev]);
+            alert('Đã thêm Mẫu nhà mới!');
+        }
+        setView('products.unittypes');
+    };
+
+    const handleDeleteUnitType = (id: number) => {
+        setUnitTypes(prev => prev.filter(u => u.id !== id));
     };
 
 
     const renderView = () => {
-        switch (activeView) {
-            case 'users':
-                return <UserManagementView />;
-            case 'products.projects':
-                return <ProjectManagementView projects={projects} setView={setActiveView} onToggleVisibility={handleProjectVisibilityToggle} onEditProject={handleSelectProjectForDetail} />;
-            case 'products.projects.add':
-                return <AddProjectView onAddProject={handleAddProject} setView={setActiveView} />;
-            case 'products.projects.detail':
-                 return <ProjectDetailView 
-                            project={selectedProject} 
-                            setView={setActiveView} 
-                            users={mockUsers} 
-                            blocks={blocks} 
-                            floorPlans={floorPlans}
-                            onEditBlock={handleSelectBlockForDetail}
-                            onDeleteBlock={handleDeleteBlock}
-                            onBulkDeleteBlocks={handleBulkDeleteBlocks}
-                            selectedBlockIds={selectedBlockIds}
-                            setSelectedBlockIds={setSelectedBlockIds}
-                            onAddFloorPlan={handleAddFloorPlan}
-                            onDeleteFloorPlan={handleDeleteFloorPlan}
-                            onBulkDeleteFloorPlans={handleBulkDeleteFloorPlans}
-                            selectedFloorPlanIds={selectedFloorPlanIds}
-                            setSelectedFloorPlanIds={setSelectedFloorPlanIds}
-                            onToggleBlockVisibility={handleToggleBlockVisibility}
-                         />;
-            case 'products.projects.detail.addBlock':
-                 return <AddBlockView project={selectedProject} setView={setActiveView} onAddBlock={handleAddBlock} />;
-            case 'products.projects.detail.addFloorPlan':
-                 return <AddFloorPlanView project={selectedProject} setView={setActiveView} onAddFloorPlan={handleAddFloorPlan} />;
-            case 'products.projects.detail.blockDetail':
-                return <BlockDetailView 
-                            block={selectedBlock} 
-                            project={selectedProject} 
-                            setView={setActiveView} 
-                            units={units}
-                            onUpdateUnit={handleUpdateUnit}
-                            onUpdateBlock={handleUpdateBlock}
+        if (view.startsWith('products.projects')) {
+            const project = viewState?.project;
+            if (view === 'products.projects.add') {
+                return <AddProjectView onAddProject={handleAddProject} setView={setView} />;
+            }
+            if (project) {
+                return <ProjectDetailView project={project} setView={setView} />;
+            }
+            return <ProjectManagementView
+                        projects={projects}
+                        setView={setView}
+                        onToggleVisibility={handleToggleProjectVisibility}
+                        onEditProject={handleEditProject}
+                        onDeleteProject={handleDeleteProject}
+                        onBulkDelete={handleBulkDeleteProjects}
+                        onBulkToggleVisibility={handleBulkToggleProjectVisibility}
+                    />;
+        }
+        
+         if (view.startsWith('products.subdivisions')) {
+             if (view === 'products.subdivisions.add') {
+                return <AddEditSubdivisionBlockView
+                            mode='add'
+                            item={null}
+                            onSave={handleSaveSubdivisionBlock}
+                            onCancel={() => setView('products.subdivisions')}
+                            category="subdivision"
+                            projects={projects}
+                        />
+             }
+              if (view === 'products.subdivisions.inventory.bulk-add') {
+                return <BulkInventoryCreationView
+                            subdivision={viewState.subdivision}
+                            unitTypes={unitTypes}
+                            onSave={() => setView('products.subdivisions.edit', { item: viewState.subdivision })}
+                            onCancel={() => setView('products.subdivisions.edit', { item: viewState.subdivision })}
+                        />;
+             }
+             if (view === 'products.subdivisions.edit') {
+                return <SubdivisionDetailView
+                           item={viewState.item}
+                           setView={setView}
+                           subdivisions={subdivisions}
+                           onSave={(data) => handleSaveSubdivisionBlock(data, false)}
+                           onDelete={handleDeleteSubdivisionBlock}
+                           onEdit={(item) => setView('products.buildings.edit', { item })}
                        />;
-            case 'products.retail':
-                return <RetailPropertyView />;
-            case 'transactions':
-                return <TransactionManagementView />;
-            case 'livestream':
-                return <LivestreamManagementView livestreams={livestreams} onAdd={handleAddLivestream} onDelete={handleDeleteLivestream} />;
-            case 'inbox':
-                return <InboxView />;
-            case 'dashboard':
-            default:
-                return <DashboardView />;
+             }
+             const subdivisionData = subdivisions.filter(s => s.category === 'subdivision');
+             return <SubdivisionManagementView 
+                        subdivisions={subdivisionData}
+                        onAdd={() => setView('products.subdivisions.add')}
+                        onDelete={handleDeleteSubdivisionBlock}
+                        onEdit={(item) => setView('products.subdivisions.edit', { item })}
+                        onToggleVisibility={handleToggleSubdivisionVisibility}
+                        onBulkDelete={handleBulkDeleteSubdivisions}
+                        onBulkToggleVisibility={handleBulkToggleSubdivisionVisibility}
+                    />;
+        }
+
+        if (view.startsWith('products.buildings')) {
+             if (view === 'products.buildings.add' || view === 'products.buildings.edit') {
+                const subdivisionData = subdivisions.filter(s => s.category === 'subdivision');
+                return <AddEditSubdivisionBlockView
+                            mode={view === 'products.buildings.add' ? 'add' : 'edit'}
+                            item={viewState?.item || null}
+                            onSave={handleSaveSubdivisionBlock}
+                            onCancel={() => setView('products.buildings')}
+                            category="block"
+                            projects={projects}
+                            subdivisions={subdivisionData}
+                        />
+             }
+             const buildingData = subdivisions.filter(s => s.category === 'block');
+             const subdivisionData = subdivisions.filter(s => s.category === 'subdivision');
+             return <BuildingManagementView
+                        buildings={buildingData}
+                        subdivisions={subdivisionData}
+                        onAdd={() => setView('products.buildings.add')}
+                        onDelete={handleDeleteSubdivisionBlock}
+                        onEdit={(item) => setView('products.buildings.edit', { item })}
+                        onToggleVisibility={handleToggleSubdivisionVisibility}
+                        onBulkDelete={handleBulkDeleteSubdivisions}
+                        onBulkToggleVisibility={handleBulkToggleSubdivisionVisibility}
+                    />;
+        }
+
+        if (view.startsWith('products.unittypes')) {
+            if (view === 'products.unittypes.add' || view === 'products.unittypes.edit') {
+                return <AddEditUnitTypeView
+                            mode={view === 'products.unittypes.add' ? 'add' : 'edit'}
+                            item={viewState?.item || null}
+                            onSave={handleSaveUnitType}
+                            onCancel={() => setView('products.unittypes')}
+                        />;
+            }
+             return <UnitTypesView
+                        unitTypes={unitTypes}
+                        setView={setView}
+                        onDelete={handleDeleteUnitType}
+                    />;
+        }
+
+        switch (view) {
+            case 'dashboard': return <DashboardView />;
+            case 'users': return <UserManagementView />;
+            case 'products.properties': return <PropertiesView />;
+            case 'transactions': return <TransactionManagementView />;
+            case 'livestream': return <LivestreamManagementView />;
+            case 'inbox': return <InboxView />;
+            default: return <DashboardView />;
         }
     };
 
     return (
         <div style={styles.appContainer}>
-            <Sidebar
-              activeView={activeView}
-              setView={setActiveView}
-              isCollapsed={isSidebarCollapsed}
-              setCollapsed={setSidebarCollapsed}
-            />
+            <Sidebar activeView={view} setView={setView} isCollapsed={isSidebarCollapsed} setCollapsed={setSidebarCollapsed} />
             <main style={styles.mainContent}>
                 {renderView()}
             </main>
@@ -2771,5 +3008,7 @@ const App = () => {
 };
 
 const container = document.getElementById('root');
-const root = createRoot(container!);
-root.render(<App />);
+if (container) {
+    const root = createRoot(container);
+    root.render(<App />);
+}
