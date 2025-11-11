@@ -2,6 +2,31 @@
 import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
+// --- HELPERS ---
+const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        // FIX: Add Intl.DateTimeFormatOptions type to the options object to fix type error.
+        const options: Intl.DateTimeFormatOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        };
+        return new Intl.DateTimeFormat('vi-VN', options).format(date);
+    } catch (error) {
+        return dateString;
+    }
+};
+
+const formatPrice = (price: number | string) => {
+    if (typeof price !== 'number') return price;
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+};
+
+
 // --- MOCK DATA ---
 const mockUsers = [
     { id: 1, name: 'Nguyễn Văn A', email: 'vana@example.com', phone: '0901234567', role: 'Quản trị' },
@@ -18,13 +43,13 @@ const mockProjects = [
 
 const mockSubdivisions = [
     // Subdivisions (Phân khu)
-    { id: 1, category: 'subdivision', projectId: 1, name: 'The Rainbow', code: 'RB', type: 'Phân khu Căn hộ', status: 'Đã bàn giao', createdAt: '2023-01-15T10:00:00Z', visible: true },
-    { id: 2, category: 'subdivision', projectId: 1, name: 'The Origami', code: 'OG', type: 'Phân khu Căn hộ', status: 'Đang xây dựng', createdAt: '2023-05-20T14:30:00Z', visible: true },
-    { id: 3, category: 'subdivision', projectId: 1, name: 'The Manhattan', code: 'MH', type: 'Phân khu Biệt thự', status: 'Đã bàn giao', createdAt: '2022-11-10T09:00:00Z', visible: false },
+    { id: 1, category: 'subdivision', projectId: 1, name: 'The Rainbow', code: 'RB', type: 'Phân khu Căn hộ', status: 'Đang mở bán', createdAt: '2023-01-15T10:00:00Z', visible: true },
+    { id: 2, category: 'subdivision', projectId: 1, name: 'The Origami', code: 'OG', type: 'Phân khu Căn hộ', status: 'Đang mở bán', createdAt: '2023-05-20T14:30:00Z', visible: true },
+    { id: 3, category: 'subdivision', projectId: 1, name: 'The Manhattan', code: 'MH', type: 'Phân khu Biệt thự', status: 'Đã bán hết', createdAt: '2022-11-10T09:00:00Z', visible: false },
 
     // Blocks (Khối BĐS)
     { id: 4, category: 'block', projectId: 1, parentSubdivisionId: 1, name: 'Tòa S1.01', code: 'S101', type: 'Chung cư', status: 'Đang mở bán', unitCount: 250, createdAt: '2024-02-01T11:00:00Z', visible: true },
-    { id: 5, category: 'block', projectId: 1, parentSubdivisionId: 2, name: 'Tòa S2.02', code: 'S202', type: 'Chung cư', status: 'Đang xây dựng', unitCount: 300, createdAt: '2024-06-15T16:45:00Z', visible: true },
+    { id: 5, category: 'block', projectId: 1, parentSubdivisionId: 2, name: 'Tòa S2.02', code: 'S202', type: 'Chung cư', status: 'Đang mở bán', unitCount: 300, createdAt: '2024-06-15T16:45:00Z', visible: true },
     { id: 6, category: 'block', projectId: 1, parentSubdivisionId: 3, name: 'Khu Liền kề A - Phố Đông', code: 'LK-A', type: 'Liền kề', status: 'Đã bán hết', unitCount: 50, createdAt: '2023-09-15T16:45:00Z', visible: false },
     { id: 7, category: 'block', projectId: 2, name: 'Central Park 1', code: 'CP1', type: 'Shophouse', status: 'Sắp mở bán', unitCount: 40, createdAt: '2024-08-01T10:00:00Z', visible: true }, // No parent subdivision
 ];
@@ -44,9 +69,12 @@ const mockProjectAgencies = [
 ];
 
 const mockRetailProperties = [
-    { id: 1, name: 'Biệt thự Thảo Điền', address: 'Quận 2, TP. HCM', price: '150 tỷ', type: 'Biệt thự', status: 'Đang bán' },
-    { id: 2, name: 'Nhà phố trung tâm', address: 'Quận 1, TP. HCM', price: '50 tỷ', type: 'Nhà phố', status: 'Đã bán' },
-    { id: 3, name: 'Căn hộ dịch vụ', address: 'Quận 7, TP. HCM', price: '5 tỷ', type: 'Căn hộ', status: 'Đang cho thuê' },
+    { id: 1, code: 'VGP-S101-0101', title: 'Căn hộ 2PN view công viên', name: 'S1.01-0101', status: 'Đang mở bán', type: 'Căn hộ', projectId: 1, subdivisionId: 1, blockId: 4, price: 2800000000, visible: true, createdAt: '2024-07-01T10:00:00Z' },
+    { id: 2, code: 'VGP-S101-0102', title: 'Căn hộ studio', name: 'S1.01-0102', status: 'Đang mở bán', type: 'Căn hộ', projectId: 1, subdivisionId: 1, blockId: 4, price: 1500000000, visible: true, createdAt: '2024-07-01T10:00:00Z' },
+    { id: 3, code: 'VGP-MH-LK-A-05', title: 'Biệt thự song lập The Manhattan', name: 'LK-A-05', status: 'Đã bán hết', type: 'Biệt thự', projectId: 1, subdivisionId: 3, blockId: 6, price: 25000000000, visible: false, createdAt: '2023-11-20T10:00:00Z' },
+    { id: 4, code: 'MCP-CP1-SH01', title: 'Shophouse mặt tiền đường lớn', name: 'CP1-SH01', status: 'Sắp mở bán', type: 'Shophouse', projectId: 2, subdivisionId: null, blockId: 7, price: 12000000000, visible: true, createdAt: '2024-08-10T10:00:00Z' },
+    { id: 5, code: 'RE-TD-01', title: 'Biệt thự Thảo Điền view sông', name: 'Villa Thảo Điền', status: 'Đang mở bán', type: 'Biệt thự', projectId: null, subdivisionId: null, blockId: null, price: 150000000000, visible: true, createdAt: '2024-05-15T10:00:00Z' },
+    { id: 6, code: 'RE-Q1-NP', title: 'Nhà phố trung tâm Quận 1', name: 'Nhà phố Nguyễn Huệ', status: 'Đã bán hết', type: 'Nhà phố', projectId: null, subdivisionId: null, blockId: null, price: 50000000000, visible: true, createdAt: '2024-01-10T10:00:00Z' },
 ];
 
 
@@ -82,23 +110,7 @@ const mockMessages = {
     ]
 };
 
-const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    try {
-        const date = new Date(dateString);
-        // FIX: Add Intl.DateTimeFormatOptions type to the options object to fix type error.
-        const options: Intl.DateTimeFormatOptions = {
-            hour: '2-digit',
-            minute: '2-digit',
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        };
-        return new Intl.DateTimeFormat('vi-VN', options).format(date);
-    } catch (error) {
-        return dateString;
-    }
-};
+const STATUS_OPTIONS = ["Đang mở bán", "Sắp mở bán", "Đã bán hết"];
 
 // --- ICONS ---
 const Icon = ({ path, size = 22, style = {} }: {path: React.ReactNode, size?: number, style?: React.CSSProperties}) => (
@@ -904,7 +916,7 @@ const AddProjectView = ({ onAddProject, setView }: { onAddProject: (project: any
     // FIX: Replace `aistudio.useState` with `useState`.
     const [masterPlan, setMasterPlan] = useState(null);
     // FIX: Replace `aistudio.useState` with `useState`.
-    const [status, setStatus] = useState('Đang cập nhật');
+    const [status, setStatus] = useState(STATUS_OPTIONS[0]);
     // FIX: Replace `aistudio.useState` with `useState`.
     const [isVisible, setIsVisible] = useState(true);
 
@@ -916,16 +928,6 @@ const AddProjectView = ({ onAddProject, setView }: { onAddProject: (project: any
     const [handoverMonth, setHandoverMonth] = useState('');
     // FIX: Replace `aistudio.useState` with `useState`.
     const [handoverYear, setHandoverYear] = useState('');
-
-    const STATUS_OPTIONS = [
-        "Đang cập nhật",
-        "Sắp mở bán",
-        "Đang mở bán",
-        "Đang xây dựng",
-        "Đã bàn giao",
-        "Đã bán hết",
-        "Tạm dừng",
-    ];
 
     const handleSubmit = () => {
         if (!name || !investor || !address) {
@@ -1180,8 +1182,6 @@ const ProjectManagementView = ({
 
     const isAllSelected = selectedIds.size > 0 && selectedIds.size === filteredProjects.length;
 
-    const uniqueStatuses = [...new Set(mockProjects.map(p => p.status))];
-
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -1207,7 +1207,7 @@ const ProjectManagementView = ({
                     />
                      <select style={styles.formInput} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
                         <option value="all">Tất cả trạng thái</option>
-                        {uniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                        {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
             </div>
@@ -1272,10 +1272,6 @@ const ProjectManagementView = ({
 const OverviewTab = ({ project }: { project: any }) => {
     // In a real app, you would manage state for each field to make them editable.
     // For this example, we'll just display the data in form inputs.
-    const STATUS_OPTIONS = [
-        "Đang cập nhật", "Sắp mở bán", "Đang mở bán", "Đang xây dựng",
-        "Đã bàn giao", "Đã bán hết", "Tạm dừng",
-    ];
     return (
         <div style={{maxWidth: '900px', margin: '0 auto'}}>
             {/* Section 1: Basic Info */}
@@ -1683,7 +1679,7 @@ const AddEditSubdivisionBlockView = ({
     };
 
     const handleSubmit = () => {
-        if (!formData.projectId && category === 'subdivision') {
+        if (category === 'subdivision' && !formData.projectId) {
              alert('Vui lòng chọn một Dự án.');
              return;
         }
@@ -1696,7 +1692,6 @@ const AddEditSubdivisionBlockView = ({
     
     const SUBDIVISION_TYPES = ["Phân khu Biệt thự", "Phân khu Nhà phố", "Phân khu Căn hộ"];
     const BUILDING_TYPES = ["Chung cư", "Shophouse", "Liền kề", "Biệt thự", "Officetel", "Condotel"];
-    const TRANSACTION_STATUSES = ["Đang mở bán", "Sắp mở bán", "Đã bán hết", "Đang xây dựng", "Đã bàn giao", "Tạm dừng"];
 
     // Conditional rendering checks
     const propertyType = formData.type;
@@ -1738,7 +1733,7 @@ const AddEditSubdivisionBlockView = ({
                 <div style={styles.formGroup}>
                     <label style={styles.formLabel}>Trạng thái</label>
                     <select style={styles.formInput} value={formData.status} onChange={e => handleInputChange('status', e.target.value)}>
-                        {TRANSACTION_STATUSES.map(status => <option key={status} value={status}>{status}</option>)}
+                        {STATUS_OPTIONS.map(status => <option key={status} value={status}>{status}</option>)}
                     </select>
                 </div>
             </div>
@@ -1779,7 +1774,7 @@ const AddEditSubdivisionBlockView = ({
                 <div style={styles.formGroup}>
                     <label style={styles.formLabel}>Trạng thái giao dịch</label>
                     <select style={styles.formInput} value={formData.status} onChange={e => handleInputChange('status', e.target.value)}>
-                        {TRANSACTION_STATUSES.map(status => <option key={status} value={status}>{status}</option>)}
+                        {STATUS_OPTIONS.map(status => <option key={status} value={status}>{status}</option>)}
                     </select>
                 </div>
             </div>
@@ -1899,8 +1894,7 @@ const SubdivisionManagementView = ({
     const isAllSelected = selectedIds.size > 0 && selectedIds.size === filteredSubdivisions.length;
 
     const uniqueTypes = [...new Set(mockSubdivisions.filter(s => s.category === 'subdivision').map(s => s.type))];
-    const uniqueStatuses = [...new Set(mockSubdivisions.map(s => s.status))];
-
+    
     const columns = [
         { key: 'name', label: 'Tên Phân khu', render: (row: any) => <span style={{cursor: 'pointer', fontWeight: 500}} onClick={() => onEdit(row)}>{row.name}</span> },
         { key: 'project', label: 'Thuộc Dự án', render: (row: any) => mockProjects.find(p => p.id === row.projectId)?.name || 'N/A' },
@@ -1938,7 +1932,7 @@ const SubdivisionManagementView = ({
                     </select>
                      <select style={styles.formInput} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
                         <option value="all">Tất cả trạng thái</option>
-                        {uniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                        {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
             </div>
@@ -2604,27 +2598,191 @@ const UnitTypesView = ({
     );
 };
 
-const PropertiesView = () => {
-    // FIX: Replace `aistudio.useState` with `useState`.
-    const [properties, setProperties] = useState(mockRetailProperties);
+const RetailPropertyManagementView = ({
+    properties,
+    projects,
+    subdivisions,
+    blocks,
+    onDelete,
+    onToggleVisibility,
+    onBulkDelete,
+    onBulkToggleVisibility,
+} : {
+    properties: any[],
+    projects: any[],
+    subdivisions: any[],
+    blocks: any[],
+    onDelete: (id: number) => void;
+    onToggleVisibility: (id: number) => void;
+    onBulkDelete: (ids: Set<number>) => void;
+    onBulkToggleVisibility: (ids: Set<number>, visibility: boolean) => void;
+}) => {
+    const [selectedIds, setSelectedIds] = useState(new Set<number>());
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [projectFilter, setProjectFilter] = useState('all');
+    const [subdivisionFilter, setSubdivisionFilter] = useState('all');
+    const [blockFilter, setBlockFilter] = useState('all');
     
-    const columns = [
-        { key: 'name', label: 'Tên BĐS' },
-        { key: 'address', label: 'Địa chỉ' },
-        { key: 'price', label: 'Giá' },
-        { key: 'type', label: 'Loại hình' },
-        { key: 'status', label: 'Trạng thái' },
-    ];
+    // Reset dependent filters when a parent filter changes
+    const handleProjectFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setProjectFilter(e.target.value);
+        setSubdivisionFilter('all');
+        setBlockFilter('all');
+    };
     
+    const handleSubdivisionFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSubdivisionFilter(e.target.value);
+        setBlockFilter('all');
+    };
+    
+    const availableSubdivisions = useMemo(() => {
+        if (projectFilter === 'all') return subdivisions;
+        return subdivisions.filter(s => s.projectId === parseInt(projectFilter));
+    }, [projectFilter, subdivisions]);
+
+    const availableBlocks = useMemo(() => {
+        if (subdivisionFilter === 'all') {
+            if (projectFilter === 'all') return blocks;
+            const projectSubdivisionIds = subdivisions.filter(s => s.projectId === parseInt(projectFilter)).map(s => s.id);
+            return blocks.filter(b => b.projectId === parseInt(projectFilter) && projectSubdivisionIds.includes(b.parentSubdivisionId));
+        }
+        return blocks.filter(b => b.parentSubdivisionId === parseInt(subdivisionFilter));
+    }, [subdivisionFilter, projectFilter, blocks, subdivisions]);
+
+    const filteredProperties = useMemo(() => {
+        return properties.filter(p => {
+            const searchMatch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.code.toLowerCase().includes(searchTerm.toLowerCase());
+            const statusMatch = statusFilter === 'all' || p.status === statusFilter;
+            const typeMatch = typeFilter === 'all' || p.type === typeFilter;
+            const projectMatch = projectFilter === 'all' || p.projectId === parseInt(projectFilter);
+            const subdivisionMatch = subdivisionFilter === 'all' || p.subdivisionId === parseInt(subdivisionFilter);
+            const blockMatch = blockFilter === 'all' || p.blockId === parseInt(blockFilter);
+            
+            return searchMatch && statusMatch && typeMatch && projectMatch && subdivisionMatch && blockMatch;
+        });
+    }, [properties, searchTerm, statusFilter, typeFilter, projectFilter, subdivisionFilter, blockFilter]);
+
+    const handleSelectRow = (id: number) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) newSet.delete(id); else newSet.add(id);
+            return newSet;
+        });
+    };
+
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSelectedIds(e.target.checked ? new Set(filteredProperties.map(p => p.id)) : new Set());
+    };
+    
+    const handleBulkDelete = () => {
+        onBulkDelete(selectedIds);
+        setSelectedIds(new Set());
+    };
+    
+    const handleBulkVisibility = (visibility: boolean) => {
+        onBulkToggleVisibility(selectedIds, visibility);
+        setSelectedIds(new Set());
+    };
+
+    const isAllSelected = selectedIds.size > 0 && selectedIds.size === filteredProperties.length;
+    const uniqueTypes = [...new Set(properties.map(p => p.type))];
+
     return (
-        <TabularDataManagement
-            title="Quản lý Bất động sản"
-            columns={columns}
-            data={properties}
-            onAdd={() => alert('Add property')}
-            onEdit={(row) => alert(`Edit ${row.name}`)}
-            onDelete={(row) => alert(`Delete ${row.name}`)}
-        />
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ ...styles.header, marginBottom: 0 }}>Quản lý Bất động sản</h2>
+                <div>
+                    <button style={{ ...styles.actionButton, padding: '10px 15px', marginRight: '10px' }}><DownloadIcon /> Import (CSV)</button>
+                    <button style={styles.button}>Tạo BĐS mới</button>
+                </div>
+            </div>
+
+            {/* Filter Section */}
+            <div style={{ ...styles.tableContainer, padding: '20px', marginBottom: '20px', backgroundColor: '#f8f9fa', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                    <input type="text" placeholder="Tìm theo Mã BĐS/Tên..." style={styles.formInput} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    <select style={styles.formInput} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                        <option value="all">Tất cả trạng thái</option>
+                        {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <select style={styles.formInput} value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+                        <option value="all">Tất cả loại hình</option>
+                        {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                </div>
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                    <select style={styles.formInput} value={projectFilter} onChange={handleProjectFilterChange}>
+                        <option value="all">Tất cả dự án</option>
+                        {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                    <select style={styles.formInput} value={subdivisionFilter} onChange={handleSubdivisionFilterChange} disabled={projectFilter === 'all'}>
+                        <option value="all">Tất cả phân khu</option>
+                        {availableSubdivisions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                    <select style={styles.formInput} value={blockFilter} onChange={e => setBlockFilter(e.target.value)} disabled={subdivisionFilter === 'all'}>
+                        <option value="all">Tất cả block</option>
+                        {availableBlocks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                 </div>
+            </div>
+
+            {selectedIds.size > 0 && (
+                <div style={styles.bulkActionToolbar}>
+                    <span style={{ fontWeight: 600 }}>{selectedIds.size} đã chọn</span>
+                    <button style={styles.actionButton} onClick={handleBulkDelete}><TrashIcon /> Xóa</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                       <span style={{fontWeight: 500}}>Cài đặt hiển thị:</span>
+                       <button style={{...styles.actionButton, padding: '8px 12px'}} onClick={() => handleBulkVisibility(true)}>Hiện</button>
+                       <button style={{...styles.actionButton, padding: '8px 12px'}} onClick={() => handleBulkVisibility(false)}>Ẩn</button>
+                    </div>
+                </div>
+            )}
+
+            <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={{ ...styles.th, width: '50px' }}><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /></th>
+                            <th style={styles.th}>Mã BĐS</th>
+                            <th style={styles.th}>Tiêu đề</th>
+                            <th style={styles.th}>Trạng thái</th>
+                            <th style={styles.th}>Dự án / Phân khu / Block</th>
+                            <th style={styles.th}>Giá (VND)</th>
+                            <th style={styles.th}>Hiển thị</th>
+                            <th style={styles.th}>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredProperties.map(prop => {
+                            const project = projects.find(p => p.id === prop.projectId);
+                            const subdivision = subdivisions.find(s => s.id === prop.subdivisionId);
+                            const block = blocks.find(b => b.id === prop.blockId);
+                            const hierarchy = [project?.name, subdivision?.name, block?.name].filter(Boolean).join(' / ');
+                            return (
+                                <tr key={prop.id} style={{ backgroundColor: selectedIds.has(prop.id) ? 'var(--active-item-bg)' : 'transparent' }}>
+                                    <td style={styles.td}><input type="checkbox" checked={selectedIds.has(prop.id)} onChange={() => handleSelectRow(prop.id)} /></td>
+                                    <td style={styles.td}>{prop.code}</td>
+                                    <td style={styles.td}>
+                                        <div style={{fontWeight: 500}}>{prop.title}</div>
+                                        <div style={{fontSize: '12px', color: 'var(--text-secondary)'}}>Tên BĐS: {prop.name} - {prop.type}</div>
+                                    </td>
+                                    <td style={styles.td}>{prop.status}</td>
+                                    <td style={styles.td}>{hierarchy || 'Không thuộc dự án'}</td>
+                                    <td style={styles.td}>{formatPrice(prop.price)}</td>
+                                    <td style={styles.td}><ToggleSwitch checked={prop.visible} onChange={() => onToggleVisibility(prop.id)} /></td>
+                                    <td style={styles.td}>
+                                        <button style={styles.actionButton}>Sửa</button>
+                                        <button style={styles.actionButton} onClick={() => onDelete(prop.id)}>Xoá</button>
+                                    </td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     );
 };
 
@@ -2789,6 +2947,8 @@ const App = () => {
     const [subdivisions, setSubdivisions] = useState(mockSubdivisions);
     // FIX: Replace `aistudio.useState` with `useState`.
     const [unitTypes, setUnitTypes] = useState(mockUnitTypes);
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [retailProperties, setRetailProperties] = useState(mockRetailProperties);
 
     // FIX: Replace `aistudio.useState` with `useState`.
     const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -2879,6 +3039,27 @@ const App = () => {
 
     const handleDeleteUnitType = (id: number) => {
         setUnitTypes(prev => prev.filter(u => u.id !== id));
+    };
+
+    const handleDeleteRetailProperty = (id: number) => {
+        if (window.confirm('Bạn có chắc muốn xóa BĐS này?')) {
+            setRetailProperties(prev => prev.filter(p => p.id !== id));
+        }
+    };
+
+    const handleToggleRetailPropertyVisibility = (id: number) => {
+        setRetailProperties(prev => prev.map(p => p.id === id ? { ...p, visible: !p.visible } : p));
+    };
+
+    const handleBulkDeleteRetailProperties = (ids: Set<number>) => {
+        if (window.confirm(`Bạn có chắc muốn xóa ${ids.size} BĐS đã chọn?`)) {
+            setRetailProperties(prev => prev.filter(p => !ids.has(p.id)));
+        }
+    };
+
+    // FIX: Correctly use the `visibility` parameter to update the `visible` property. The shorthand `visible` was causing an error.
+    const handleBulkToggleRetailPropertyVisibility = (ids: Set<number>, visibility: boolean) => {
+        setRetailProperties(prev => prev.map(p => ids.has(p.id) ? { ...p, visible: visibility } : p));
     };
 
 
@@ -2989,7 +3170,17 @@ const App = () => {
         switch (view) {
             case 'dashboard': return <DashboardView />;
             case 'users': return <UserManagementView />;
-            case 'products.properties': return <PropertiesView />;
+            case 'products.properties': 
+                return <RetailPropertyManagementView
+                    properties={retailProperties}
+                    projects={projects}
+                    subdivisions={subdivisions.filter(s => s.category === 'subdivision')}
+                    blocks={subdivisions.filter(s => s.category === 'block')}
+                    onDelete={handleDeleteRetailProperty}
+                    onToggleVisibility={handleToggleRetailPropertyVisibility}
+                    onBulkDelete={handleBulkDeleteRetailProperties}
+                    onBulkToggleVisibility={handleBulkToggleRetailPropertyVisibility}
+                />;
             case 'transactions': return <TransactionManagementView />;
             case 'livestream': return <LivestreamManagementView />;
             case 'inbox': return <InboxView />;
