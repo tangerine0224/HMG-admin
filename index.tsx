@@ -77,6 +77,12 @@ const mockRetailProperties = [
     { id: 6, code: 'RE-Q1-NP', title: 'Nhà phố trung tâm Quận 1', name: 'Nhà phố Nguyễn Huệ', status: 'Đã bán hết', type: 'Nhà phố', projectId: null, subdivisionId: null, blockId: null, price: 50000000000, visible: true, createdAt: '2024-01-10T10:00:00Z' },
 ];
 
+const mockNotifications = [
+    { id: 1, title: 'Chào mừng bạn đến với nền tảng mới!', type: 'Thông báo', audience: 'Tất cả người dùng', status: 'Đã gửi', createdAt: '2024-08-01T10:00:00Z' },
+    { id: 2, title: 'Banner quảng cáo dự án Vinhomes Grand Park', type: 'Banner', audience: 'Người dùng mới', status: 'Đã gửi', createdAt: '2024-07-30T15:00:00Z' },
+    { id: 3, title: 'Sự kiện mở bán The Origami sắp diễn ra', type: 'Thông báo', audience: 'Khách hàng quan tâm', status: 'Nháp', createdAt: '2024-08-05T11:30:00Z' },
+];
+
 
 const mockTransactions = [
     { id: 'TXN001', unitCode: 'S1.01-0502', projectName: 'Vinhomes Grand Park', customerName: 'Trần Thị B', amount: '50,000,000 VND', date: '2024-07-20', status: 'Thành công' },
@@ -85,9 +91,10 @@ const mockTransactions = [
 ];
 
 const mockLivestreams = [
-    { id: 1, title: 'Mở bán dự án The 9 Stellars', startTime: '2024-08-15T19:00', youtubeLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', relatedProducts: [5] },
-    { id: 2, title: 'Giới thiệu dự án Masteri', startTime: '2024-08-20T10:00', youtubeLink: 'https://youtu.be/dQw4w9WgXcQ', relatedProducts: [] },
-    { id: 3, title: 'Hỏi đáp cùng chuyên gia (Đã diễn ra)', startTime: '2024-07-25T14:00', youtubeLink: 'https://youtube.com/live/someid', relatedProducts: [1, 2, 3] },
+    { id: 1, title: 'Mở bán dự án The 9 Stellars', startTime: '2024-08-15T19:00:00Z', youtubeLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', relatedProducts: [5] },
+    { id: 2, title: 'Giới thiệu dự án Masteri', startTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), youtubeLink: 'https://youtu.be/dQw4w9WgXcQ', relatedProducts: [] },
+    { id: 3, title: 'Hỏi đáp cùng chuyên gia (Đã diễn ra)', startTime: '2024-07-25T14:00:00Z', youtubeLink: 'https://youtube.com/live/someid', relatedProducts: [1, 2, 3] },
+    { id: 4, title: 'Sự kiện đang diễn ra', startTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(), youtubeLink: 'https://youtube.com/live/someid', relatedProducts: [4] },
 ];
 
 const mockConversations = [
@@ -136,6 +143,7 @@ const ProductsIcon = () => <Icon path={<><line x1="16.5" y1="9.4" x2="7.5" y2="4
 const TransactionIcon = () => <Icon path={<><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></>} />;
 const LivestreamIcon = () => <Icon path={<><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></>} />;
 const InboxIcon = () => <Icon path={<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></>} />;
+const NotificationIcon = () => <Icon path={<><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></>} />;
 const ChevronLeftIcon = () => <Icon path={<polyline points="15 18 9 12 15 6"></polyline>} />;
 const ChevronRightIcon = () => <Icon path={<polyline points="9 18 15 12 9 6"></polyline>} />;
 const TrashIcon = () => <Icon path={<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>} size={18} />;
@@ -611,6 +619,7 @@ const Sidebar = ({ activeView, setView, isCollapsed, setCollapsed }: { activeVie
         { id: 'transactions', label: 'Giao dịch', icon: <TransactionIcon /> },
         { id: 'livestream', label: 'Livestream', icon: <LivestreamIcon /> },
         { id: 'inbox', label: 'Inbox', icon: <InboxIcon /> },
+        { id: 'notifications', label: 'Thông báo', icon: <NotificationIcon /> },
     ];
 
     const sidebarStyle: React.CSSProperties = {
@@ -768,7 +777,8 @@ const UserManagementView = () => {
     // FIX: Replace `aistudio.useState` with `useState`.
     const [users, setUsers] = useState(mockUsers);
     // FIX: Replace `aistudio.useState` with `useState`.
-    const [selectedUserIds, setSelectedUserIds] = useState(new Set());
+    // FIX: Explicitly type the Set to number to resolve type inference issue.
+    const [selectedUserIds, setSelectedUserIds] = useState(new Set<number>());
     // FIX: Replace `aistudio.useState` with `useState`.
     const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
     // FIX: Replace `aistudio.useState` with `useState`.
@@ -1520,7 +1530,8 @@ const LinkedSubdivisionsTab = ({ project }: { project: any }) => {
 
 const AgenciesTab = ({ project }: { project: any }) => {
     // FIX: Replace `aistudio.useState` with `useState`.
-    const [selectedIds, setSelectedIds] = useState(new Set());
+    // FIX: Explicitly type useState to Set<number> to resolve type inference issue.
+    const [selectedIds, setSelectedIds] = useState(new Set<number>());
     
     // FIX: Replace `aistudio.useMemo` with `useMemo`.
     const agenciesForProject = useMemo(() => {
@@ -2786,6 +2797,48 @@ const RetailPropertyManagementView = ({
     );
 };
 
+const NotificationManagementView = () => {
+    const [notifications, setNotifications] = useState(mockNotifications);
+
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{...styles.header, marginBottom: 0}}>Quản lý Thông báo</h2>
+                <button style={styles.button}>Tạo mới</button>
+            </div>
+            <div style={styles.tableContainer}>
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={styles.th}>Tiêu đề</th>
+                            <th style={styles.th}>Loại</th>
+                            <th style={styles.th}>Đối tượng</th>
+                            <th style={styles.th}>Trạng thái</th>
+                            <th style={styles.th}>Ngày tạo</th>
+                            <th style={styles.th}>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {notifications.map(noti => (
+                            <tr key={noti.id}>
+                                <td style={styles.td}>{noti.title}</td>
+                                <td style={styles.td}>{noti.type}</td>
+                                <td style={styles.td}>{noti.audience}</td>
+                                <td style={styles.td}>{noti.status}</td>
+                                <td style={styles.td}>{formatDate(noti.createdAt).split(',')[1]}</td>
+                                <td style={styles.td}>
+                                    <button style={styles.actionButton}><EditIcon/></button>
+                                    <button style={styles.actionButton}><TrashIcon/></button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
+
 
 const TransactionManagementView = () => {
     // FIX: Replace `aistudio.useState` with `useState`.
@@ -2826,18 +2879,285 @@ const TransactionManagementView = () => {
     );
 };
 
-const LivestreamManagementView = () => {
-    // FIX: Replace `aistudio.useState` with `useState`.
-    const [livestreams, setLivestreams] = useState(mockLivestreams);
-    const now = new Date();
+const AddProductModal = ({
+    isOpen,
+    onClose,
+    productType, // 'project' or 'property' or 'unitType'
+    allItems, // either all projects or all properties or all unit types
+    alreadyAddedIds,
+    onAddItems,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    productType: 'project' | 'property' | 'unitType';
+    allItems: any[];
+    alreadyAddedIds: Set<number>;
+    onAddItems: (items: any[]) => void;
+}) => {
+    if (!isOpen) return null;
 
-    const isLive = (startTime: string) => {
-        try {
-            const startDate = new Date(startTime);
-            const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Assume 2 hour duration
-            return now >= startDate && now <= endDate;
-        } catch {
-            return false;
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedIds, setSelectedIds] = useState(new Set<number>());
+
+    const filteredItems = useMemo(() => {
+        return allItems.filter(item => 
+            (item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (item.title && item.title.toLowerCase().includes(searchTerm.toLowerCase())))
+        );
+    }, [allItems, searchTerm]);
+
+    const handleToggleSelect = (id: number) => {
+        if (alreadyAddedIds.has(id)) return; // Can't select already added items
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
+            return newSet;
+        });
+    };
+
+    const handleConfirmAdd = () => {
+        const itemsToAdd = allItems.filter(item => selectedIds.has(item.id));
+        onAddItems(itemsToAdd.map(item => {
+            let finalType = '';
+            const finalName = item.title || item.name;
+
+            switch(productType) {
+                case 'project': finalType = 'Dự án'; break;
+                case 'property': finalType = 'Bất động sản'; break;
+                case 'unitType': finalType = 'Mẫu nhà'; break;
+            }
+
+            return {
+                id: item.id,
+                name: finalName,
+                type: finalType,
+            };
+        }));
+        onClose();
+    };
+
+    const title =
+        productType === 'project' ? 'Thêm dự án' :
+        productType === 'property' ? 'Thêm Bất động sản' :
+        'Thêm Mẫu nhà';
+
+    return (
+        <div style={styles.modalBackdrop}>
+            <div style={{ ...styles.modalContent, maxWidth: '700px', height: '80vh', display: 'flex', flexDirection: 'column' }}>
+                <h3 style={styles.modalHeader}>{title}</h3>
+                <button style={styles.modalCloseButton} onClick={onClose}><XIcon /></button>
+                <input
+                    type="text"
+                    placeholder="Tìm theo tên..."
+                    style={{...styles.formInput, marginBottom: '15px'}}
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                />
+                <div style={{ flex: 1, overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+                    <table style={styles.table}>
+                        <thead>
+                            <tr>
+                                <th style={{...styles.th, width: '50px' }}></th>
+                                <th style={styles.th}>Tên</th>
+                                <th style={styles.th}>Loại</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredItems.map(item => {
+                                const isAdded = alreadyAddedIds.has(item.id);
+                                return (
+                                <tr key={item.id} 
+                                    onClick={() => handleToggleSelect(item.id)}
+                                    style={{
+                                        cursor: isAdded ? 'not-allowed' : 'pointer',
+                                        backgroundColor: selectedIds.has(item.id) ? 'var(--active-item-bg)' : 'transparent',
+                                        opacity: isAdded ? 0.5 : 1,
+                                    }}
+                                >
+                                    <td style={styles.td}>
+                                        <input type="checkbox" checked={selectedIds.has(item.id)} readOnly disabled={isAdded}/>
+                                    </td>
+                                    <td style={styles.td}>{item.title || item.name}</td>
+                                    <td style={styles.td}>{
+                                        productType === 'project' ? 'Dự án' :
+                                        productType === 'unitType' ? 'Mẫu nhà' :
+                                        item.type
+                                    }</td>
+                                </tr>
+                            )})}
+                        </tbody>
+                    </table>
+                </div>
+                <div style={styles.formFooter}>
+                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={onClose}>Hủy</button>
+                    <button style={{...styles.button, cursor: selectedIds.size === 0 ? 'not-allowed' : 'pointer', opacity: selectedIds.size === 0 ? 0.6 : 1}} onClick={handleConfirmAdd} disabled={selectedIds.size === 0}>Thêm ({selectedIds.size})</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const AddEditLivestreamView = ({
+    mode,
+    item,
+    onSave,
+    onCancel,
+    allProjects,
+    allProperties,
+    allUnitTypes,
+} : {
+    mode: 'add' | 'edit';
+    item: any | null;
+    onSave: (data: any) => void;
+    onCancel: () => void;
+    allProjects: any[];
+    allProperties: any[];
+    allUnitTypes: any[];
+}) => {
+    const [formData, setFormData] = useState(item || {
+        title: '',
+        startTime: new Date().toISOString().slice(0, 16),
+        youtubeLink: '',
+        relatedProducts: [], // Will store objects like { id, name, type }
+    });
+    
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [modalProductType, setModalProductType] = useState<'project' | 'property' | 'unitType'>('project');
+    
+    const handleInputChange = (field: string, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleOpenModal = (type: 'project' | 'property' | 'unitType') => {
+        setModalProductType(type);
+        setModalOpen(true);
+    };
+    
+    const handleAddProducts = (newItems: any[]) => {
+        const newProducts = [...formData.relatedProducts];
+        const existingIds = new Set(newProducts.map(p => p.id));
+        newItems.forEach(item => {
+            if (!existingIds.has(item.id)) {
+                newProducts.push(item);
+            }
+        });
+        handleInputChange('relatedProducts', newProducts);
+    };
+
+    const handleRemoveProduct = (productId: number, productType: string) => {
+        handleInputChange('relatedProducts', formData.relatedProducts.filter((p: any) => !(p.id === productId && p.type === productType)));
+    };
+
+    const handleSubmit = () => {
+        if (!formData.title || !formData.startTime || !formData.youtubeLink) {
+            alert('Vui lòng điền đầy đủ Tiêu đề, Thời gian bắt đầu và Link YouTube.');
+            return;
+        }
+        onSave(formData);
+    };
+
+    const relatedProductIds = useMemo(() => new Set(formData.relatedProducts.map((p: any) => p.id)), [formData.relatedProducts]);
+    
+    return (
+        <div>
+             <AddProductModal
+                isOpen={isModalOpen}
+                onClose={() => setModalOpen(false)}
+                productType={modalProductType}
+                allItems={
+                    modalProductType === 'project' ? allProjects :
+                    modalProductType === 'property' ? allProperties :
+                    allUnitTypes
+                }
+                alreadyAddedIds={relatedProductIds}
+                onAddItems={handleAddProducts}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ ...styles.header, marginBottom: 0 }}>
+                    {mode === 'add' ? 'Tạo Livestream mới' : `Chỉnh sửa: ${item?.title}`}
+                </h2>
+                <div>
+                    <button style={{ ...styles.actionButton, padding: '10px 20px' }} onClick={onCancel}>Hủy</button>
+                    <button style={styles.button} onClick={handleSubmit}>Lưu</button>
+                </div>
+            </div>
+
+            <div style={styles.formPageContainer}>
+                <div style={styles.formSection}>
+                    <h3 style={styles.formSectionHeader}>Thông tin Livestream</h3>
+                    <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>Tiêu đề</label>
+                        <input type="text" style={styles.formInput} value={formData.title} onChange={e => handleInputChange('title', e.target.value)} />
+                    </div>
+                     <div style={styles.formGrid}>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Thời gian bắt đầu</label>
+                            <input type="datetime-local" style={styles.formInput} value={formData.startTime} onChange={e => handleInputChange('startTime', e.target.value)} />
+                        </div>
+                        <div style={styles.formGroup}>
+                            <label style={styles.formLabel}>Link YouTube</label>
+                            <input type="text" style={styles.formInput} value={formData.youtubeLink} onChange={e => handleInputChange('youtubeLink', e.target.value)} />
+                        </div>
+                    </div>
+                </div>
+
+                <div style={styles.formSection}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+                        <h3 style={{...styles.formSectionHeader, border: 'none', margin: 0, padding: 0}}>Sản phẩm liên quan</h3>
+                        <div style={{display: 'flex', gap: '10px'}}>
+                            <button style={{...styles.actionButton, padding: '10px 15px'}} onClick={() => handleOpenModal('project')}>Thêm dự án</button>
+                            <button style={{...styles.actionButton, padding: '10px 15px'}} onClick={() => handleOpenModal('property')}>Thêm Bất động sản</button>
+                            <button style={{...styles.actionButton, padding: '10px 15px'}} onClick={() => handleOpenModal('unitType')}>Thêm Mẫu nhà</button>
+                        </div>
+                    </div>
+                    
+                    <div style={styles.tableContainer}>
+                        <table style={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th style={styles.th}>Tên</th>
+                                    <th style={styles.th}>Loại</th>
+                                    <th style={{...styles.th, width: '100px'}}>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {formData.relatedProducts.length === 0 ? (
+                                    <tr><td colSpan={3} style={{...styles.td, textAlign: 'center', color: 'var(--text-secondary)'}}>Chưa có sản phẩm nào.</td></tr>
+                                ) : (
+                                    formData.relatedProducts.map((prod: any, index: number) => (
+                                        <tr key={`${prod.type}-${prod.id}-${index}`}>
+                                            <td style={styles.td}>{prod.name}</td>
+                                            <td style={styles.td}>{prod.type}</td>
+                                            <td style={styles.td}>
+                                                <button style={{...styles.actionButton, marginRight: 0}} onClick={() => handleRemoveProduct(prod.id, prod.type)}><TrashIcon /></button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const LivestreamManagementView = ({ livestreams, onDeleteLivestream, setView }: { livestreams: any[], onDeleteLivestream: (id: number) => void, setView: (view: string, state?: any) => void }) => {
+    const getStatus = (startTime: string) => {
+        const now = new Date().getTime();
+        const startDate = new Date(startTime).getTime();
+        // Assume 2 hour duration for the livestream
+        const endDate = startDate + (2 * 60 * 60 * 1000);
+
+        if (now < startDate) {
+            return { text: 'Chưa diễn ra', color: '#6c757d' };
+        } else if (now >= startDate && now <= endDate) {
+            return { text: 'Đang phát', color: 'var(--live-color)' };
+        } else {
+            return { text: 'Đã diễn ra', color: '#198754' };
         }
     };
 
@@ -2845,35 +3165,45 @@ const LivestreamManagementView = () => {
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h2 style={{...styles.header, marginBottom: 0}}>Quản lý Livestream</h2>
-                <button style={styles.button}>Tạo Livestream</button>
+                <button style={styles.button} onClick={() => setView('livestream.add')}>Tạo Livestream</button>
             </div>
-             <div style={styles.tableContainer}>
+            <div style={styles.tableContainer}>
                 <table style={styles.table}>
                     <thead>
                         <tr>
                             <th style={styles.th}>Tiêu đề</th>
                             <th style={styles.th}>Thời gian bắt đầu</th>
-                            <th style={styles.th}>Link YouTube</th>
+                            <th style={styles.th}>Trạng thái</th>
                             <th style={styles.th}>Sản phẩm liên quan</th>
                             <th style={styles.th}>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {livestreams.map(ls => (
-                            <tr key={ls.id}>
-                                <td style={styles.td}>
-                                    {ls.title}
-                                    {isLive(ls.startTime) && <span style={styles.liveBadge}>LIVE</span>}
-                                </td>
-                                <td style={styles.td}>{formatDate(ls.startTime)}</td>
-                                <td style={styles.td}><a href={ls.youtubeLink} target="_blank" rel="noopener noreferrer">{ls.youtubeLink}</a></td>
-                                <td style={styles.td}>{ls.relatedProducts.length}</td>
-                                <td style={styles.td}>
-                                    <button style={styles.actionButton}>Sửa</button>
-                                    <button style={styles.actionButton}>Xoá</button>
-                                </td>
-                            </tr>
-                        ))}
+                        {livestreams.map(ls => {
+                            const statusInfo = getStatus(ls.startTime);
+                            const isDeletable = statusInfo.text === 'Chưa diễn ra' || statusInfo.text === 'Đang phát';
+
+                            return (
+                                <tr key={ls.id}>
+                                    <td style={styles.td}>{ls.title}</td>
+                                    <td style={styles.td}>{formatDate(ls.startTime)}</td>
+                                    <td style={styles.td}>
+                                        <span style={{ fontWeight: 600, color: statusInfo.color }}>{statusInfo.text}</span>
+                                    </td>
+                                    <td style={styles.td}>{ls.relatedProducts.length}</td>
+                                    <td style={styles.td}>
+                                        <button style={styles.actionButton} onClick={() => setView('livestream.edit', { item: ls })}>Sửa</button>
+                                        <button 
+                                            style={{...styles.actionButton, cursor: isDeletable ? 'pointer' : 'not-allowed', opacity: isDeletable ? 1 : 0.5}} 
+                                            onClick={() => isDeletable && onDeleteLivestream(ls.id)}
+                                            disabled={!isDeletable}
+                                        >
+                                            Xoá
+                                        </button>
+                                    </td>
+                                </tr>
+                            )
+                        })}
                     </tbody>
                 </table>
             </div>
@@ -2949,6 +3279,8 @@ const App = () => {
     const [unitTypes, setUnitTypes] = useState(mockUnitTypes);
     // FIX: Replace `aistudio.useState` with `useState`.
     const [retailProperties, setRetailProperties] = useState(mockRetailProperties);
+    // FIX: Replace `aistudio.useState` with `useState`.
+    const [livestreams, setLivestreams] = useState(mockLivestreams);
 
     // FIX: Replace `aistudio.useState` with `useState`.
     const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -3062,6 +3394,33 @@ const App = () => {
         setRetailProperties(prev => prev.map(p => ids.has(p.id) ? { ...p, visible: visibility } : p));
     };
 
+    const handleDeleteLivestream = (id: number) => {
+        if (window.confirm('Bạn có chắc chắn muốn xóa lịch này không? Nếu xóa thì tại app sẽ không hiển thị livestream này nữa')) {
+            setLivestreams(prev => prev.filter(ls => ls.id !== id));
+        }
+    };
+    
+    const handleSaveLivestream = (data: any) => {
+        // Convert related products from objects back to IDs for storing in mock data
+        const processedData = {
+            ...data,
+            relatedProducts: data.relatedProducts.map((p: any) => p.id)
+        };
+
+        if (processedData.id) { // Editing
+             setLivestreams(prev => prev.map(ls => ls.id === processedData.id ? processedData : ls));
+             alert('Đã cập nhật Livestream!');
+        } else { // Adding
+            const newLivestream = { 
+                ...processedData, 
+                id: Date.now(),
+            };
+            setLivestreams(prev => [newLivestream, ...prev]);
+            alert('Đã tạo Livestream mới!');
+        }
+        setView('livestream');
+    };
+
 
     const renderView = () => {
         if (view.startsWith('products.projects')) {
@@ -3166,6 +3525,42 @@ const App = () => {
                         onDelete={handleDeleteUnitType}
                     />;
         }
+        
+        if (view.startsWith('livestream')) {
+            if (view === 'livestream.add' || view === 'livestream.edit') {
+                 const itemToEdit = viewState?.item ? { ...viewState.item } : null;
+
+                 if (itemToEdit) {
+                    const allProductsForLookup = [...projects, ...retailProperties, ...unitTypes];
+                    const relatedProductsAsObjects = itemToEdit.relatedProducts
+                        .map((id: number) => {
+                            const product = allProductsForLookup.find(p => p.id === id);
+                            if (!product) return null;
+                            
+                            if ('investor' in product) { // Project
+                                return { id: product.id, name: product.name, type: 'Dự án' };
+                            } else if ('bedrooms' in product) { // UnitType
+                                return { id: product.id, name: product.name, type: 'Mẫu nhà' };
+                            } else if ('code' in product) { // RetailProperty
+                                return { id: product.id, name: product.title || product.name, type: 'Bất động sản' };
+                            }
+                            return null;
+                        })
+                        .filter(Boolean);
+                    itemToEdit.relatedProducts = relatedProductsAsObjects;
+                 }
+
+                return <AddEditLivestreamView
+                    mode={view === 'livestream.add' ? 'add' : 'edit'}
+                    item={itemToEdit}
+                    onSave={handleSaveLivestream}
+                    onCancel={() => setView('livestream')}
+                    allProjects={projects}
+                    allProperties={retailProperties}
+                    allUnitTypes={unitTypes}
+                />;
+            }
+        }
 
         switch (view) {
             case 'dashboard': return <DashboardView />;
@@ -3182,8 +3577,9 @@ const App = () => {
                     onBulkToggleVisibility={handleBulkToggleRetailPropertyVisibility}
                 />;
             case 'transactions': return <TransactionManagementView />;
-            case 'livestream': return <LivestreamManagementView />;
+            case 'livestream': return <LivestreamManagementView livestreams={livestreams} onDeleteLivestream={handleDeleteLivestream} setView={setView} />;
             case 'inbox': return <InboxView />;
+            case 'notifications': return <NotificationManagementView />;
             default: return <DashboardView />;
         }
     };
